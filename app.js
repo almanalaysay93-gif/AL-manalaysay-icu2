@@ -91,7 +91,7 @@ const DRUGS = {
     weightBased: true,
     formulaType: 'weightPerMin',
     doseRange: { min: 0.01, max: 3 },
-    bolus: 'Syringe 1: Levo 2 mg + 48 cc PNSS → Syringe 2: 2 cc from S1 + 8 cc PNSS. Bolus conc: 0.0008 mg/cc.',
+    bolus: 'Syringe 1: Norepinephrine 2 mg + 48 cc PNSS → Syringe 2: 2 cc from S1 + 8 cc PNSS. Bolus conc: 0.0008 mg/cc.',
     concentrations: {
       '50cc': [
         { label: 'Single', drugMg: 4.0, drugVol: 4, diluent: 46, totalVol: 50, concMcgPerCc: 80, concNote: '4 mg (4 cc) + 46 cc PNSS (80 mcg/cc)' },
@@ -122,7 +122,7 @@ const DRUGS = {
 
   epinephrine: {
     name: 'Epinephrine',
-    generic: 'Adrenaline',
+    generic: 'Epinephrine HCl',
     category: 'vasopressor',
     categoryLabel: 'Vasopressor',
     icon: '💉',
@@ -179,7 +179,7 @@ const DRUGS = {
   },
 
   isoket: {
-    name: 'Isoket',
+    name: 'Isosorbide Dinitrate',
     generic: 'Isosorbide Dinitrate',
     category: 'vasodilator',
     categoryLabel: 'Vasodilator',
@@ -209,8 +209,8 @@ const DRUGS = {
   },
 
   ntg: {
-    name: 'NTG',
-    generic: 'Glyceryl Trinitrate (Nitroglycerin)',
+    name: 'Nitroglycerin',
+    generic: 'Nitroglycerin',
     category: 'vasodilator',
     categoryLabel: 'Vasodilator',
     icon: '🫀',
@@ -277,8 +277,8 @@ const DRUGS = {
   },
 
   cordarone: {
-    name: 'Cordarone',
-    generic: 'Amiodarone',
+    name: 'Amiodarone',
+    generic: 'Amiodarone HCl',
     category: 'antiarrhythmic',
     categoryLabel: 'Antiarrhythmic',
     icon: '⚡',
@@ -327,8 +327,8 @@ const DRUGS = {
   },
 
   precedex: {
-    name: 'Precedex',
-    generic: 'Dexmedetomidine',
+    name: 'Dexmedetomidine',
+    generic: 'Dexmedetomidine HCl',
     category: 'sedative',
     categoryLabel: 'Sedative',
     icon: '😴',
@@ -743,50 +743,71 @@ function getDoseRangePercent(drug, dose) {
 // ── UI Rendering ──
 function renderDrugGrid() {
   const grid = document.getElementById('drugGrid');
-  const drugs = getFilteredDrugs();
+  if (!grid) return;
 
-  if (drugs.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
+  // Build grid items once if grid is empty
+  const cardElements = grid.querySelectorAll('.drug-card');
+  if (cardElements.length === 0) {
+    grid.innerHTML = Object.entries(DRUGS).map(([key, drug]) => `
+      <div class="drug-card cat-${drug.category}" 
+           data-drug="${key}" 
+           data-category="${drug.category}" 
+           data-search="${(drug.name + ' ' + drug.generic + ' ' + drug.categoryLabel).toLowerCase()}" 
+           onclick="openCalculator('${key}')">
+        <div class="drug-card-banner">
+          <img src="assets/meds/${key}.png" alt="${drug.name}" class="drug-card-banner-img" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+          <span class="drug-card-badge">${drug.categoryLabel}</span>
+        </div>
+        <div class="drug-card-body">
+          <div class="drug-card-name">${drug.name}</div>
+          <div class="drug-card-generic">${drug.generic}</div>
+          <div class="drug-card-info">
+            <div class="drug-card-tag">
+              <span>📐</span> ${drug.doseUnit}
+            </div>
+            ${drug.weightBased ? '<div class="drug-card-tag"><span>⚖️</span> Weight-based</div>' : ''}
+            ${drug.doseRange ? `<div class="drug-card-tag"><span>📊</span> ${drug.doseRange.min}–${drug.doseRange.max}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Fast DOM visibility toggling (Instant performance)
+  const q = (state.searchQuery || '').toLowerCase().trim();
+  const selectedCat = state.selectedCategory || 'all';
+  const cards = grid.querySelectorAll('.drug-card');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const cat = card.getAttribute('data-category');
+    const searchData = card.getAttribute('data-search') || '';
+    const matchesCat = selectedCat === 'all' || cat === selectedCat;
+    const matchesSearch = !q || searchData.includes(q);
+    const visible = matchesCat && matchesSearch;
+
+    card.style.display = visible ? '' : 'none';
+    if (visible) visibleCount++;
+  });
+
+  // Toggle empty state notice
+  let emptyStateEl = document.getElementById('drugGridEmptyState');
+  if (visibleCount === 0) {
+    if (!emptyStateEl) {
+      emptyStateEl = document.createElement('div');
+      emptyStateEl.id = 'drugGridEmptyState';
+      emptyStateEl.className = 'empty-state';
+      emptyStateEl.innerHTML = `
         <div class="empty-state-icon">🔍</div>
         <h3>No drugs found</h3>
         <p>Try adjusting your search or category filter</p>
-      </div>
-    `;
-    return;
+      `;
+      grid.appendChild(emptyStateEl);
+    }
+    emptyStateEl.style.display = 'block';
+  } else if (emptyStateEl) {
+    emptyStateEl.style.display = 'none';
   }
-
-  grid.innerHTML = drugs.map(([key, drug]) => `
-    <div class="drug-card cat-${drug.category}" data-drug="${key}" onclick="openCalculator('${key}')">
-      <div class="drug-card-banner">
-        <img src="assets/meds/${key}.png" alt="${drug.name}" class="drug-card-banner-img" onerror="this.style.display='none';"/>
-        <span class="drug-card-badge">${drug.categoryLabel}</span>
-      </div>
-      <div class="drug-card-body">
-        <div class="drug-card-name">${drug.name}</div>
-        <div class="drug-card-generic">${drug.generic}</div>
-        <div class="drug-card-info">
-          <div class="drug-card-tag">
-            <span>📐</span> ${drug.doseUnit}
-          </div>
-          ${drug.weightBased ? '<div class="drug-card-tag"><span>⚖️</span> Weight-based</div>' : ''}
-          ${drug.doseRange ? `<div class="drug-card-tag"><span>📊</span> ${drug.doseRange.min}–${drug.doseRange.max}</div>` : ''}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function getFilteredDrugs() {
-  return Object.entries(DRUGS).filter(([key, drug]) => {
-    const matchesCategory = state.selectedCategory === 'all' || drug.category === state.selectedCategory;
-    const q = state.searchQuery.toLowerCase();
-    const matchesSearch = !q ||
-      drug.name.toLowerCase().includes(q) ||
-      drug.generic.toLowerCase().includes(q) ||
-      drug.categoryLabel.toLowerCase().includes(q);
-    return matchesCategory && matchesSearch;
-  });
 }
 
 function renderCategoryPills() {
@@ -1378,7 +1399,15 @@ function attachCalcListeners(drug) {
   const customTotalVolEl = document.getElementById('customTotalVol');
   const customDoseUnitEl = document.getElementById('customDoseUnit');
 
-  const recalc = () => recalculate(drug);
+  let recalcScheduled = false;
+  const recalc = () => {
+    if (recalcScheduled) return;
+    recalcScheduled = true;
+    requestAnimationFrame(() => {
+      recalcScheduled = false;
+      recalculate(drug);
+    });
+  };
 
   if (weightEl) {
     weightEl.addEventListener('input', (e) => { state.weight = e.target.value; recalc(); });
@@ -2855,11 +2884,16 @@ function evalMathOp(a, b, op) {
 }
 
 // ── Search ──
+let searchRafId = null;
 function handleSearch(e) {
   state.searchQuery = e.target.value;
   const clearBtn = document.querySelector('.search-clear');
   if (clearBtn) clearBtn.classList.toggle('visible', state.searchQuery.length > 0);
-  renderDrugGrid();
+  
+  if (searchRafId) cancelAnimationFrame(searchRafId);
+  searchRafId = requestAnimationFrame(() => {
+    renderDrugGrid();
+  });
 }
 
 function clearSearch() {

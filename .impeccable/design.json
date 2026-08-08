@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-05T08:48:00Z",
+  "title": "Design System: Educational ABG Tutor & Clinical Analysis Suite",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Apple Medical Blue", "canonical": "#007AFF" },
+      "vital-green": { "role": "accent", "displayName": "Vital Emerald", "canonical": "#28CD41" },
+      "alert-red": { "role": "accent", "displayName": "Alert Rose", "canonical": "#FF3B30" },
+      "warning-orange": { "role": "accent", "displayName": "Warning Amber", "canonical": "#FF9500" },
+      "neutral-bg": { "role": "neutral", "displayName": "System Off-White Canvas", "canonical": "#F2F2F7" },
+      "surface-white": { "role": "neutral", "displayName": "Pure Surface White", "canonical": "#FFFFFF" }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)", "purpose": "Rest elevation for clinical cards." },
+      { "name": "card-hover", "value": "0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)", "purpose": "Hover elevation for interactive cards." }
+    ],
+    "motion": [
+      { "name": "ease-apple-clean", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Smooth deceleration easing curve." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Apple HIG styled primary action button",
+      "html": "<button class=\"ds-btn-primary\">Calculate ABG</button>",
+      "css": ".ds-btn-primary { background: #007AFF; color: #FFFFFF; padding: 10px 20px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-weight: 600; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease; } .ds-btn-primary:hover { background: #0056B3; } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Clinical Card",
+      "kind": "card",
+      "refersTo": "card-clinical",
+      "description": "White surface card with subtle border and elevation",
+      "html": "<div class=\"ds-card-clinical\"><h3 class=\"ds-card-title\">Arterial Blood Gas Parameters</h3><p class=\"ds-card-text\">Enter bedside laboratory values for automated diagnostic analysis.</p></div>",
+      "css": ".ds-card-clinical { background: #FFFFFF; border: 1px solid #E5E5EA; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); } .ds-card-title { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; font-size: 18px; font-weight: 600; color: #1C1C1E; margin: 0 0 8px 0; } .ds-card-text { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size: 14px; color: #6C6C70; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clinical Precision Instrument",
+    "overview": "The Educational ABG Tutor & Clinical Analysis Suite is crafted in the Apple Medical Clean aesthetic: serene, authoritative, pristine, and functionally transparent.",
+    "keyCharacteristics": [
+      "Apple Medical Clean visual vocabulary: ultra-legible typography, subtle depth, high contrast, and neutral canvas.",
+      "Purposeful status color coding.",
+      "Strict legibility floor (no text below 11px).",
+      "Clean, non-distracting motion with exponential deceleration curves."
+    ],
+    "rules": [
+      { "name": "The Single-Purpose Accent Rule", "body": "Color is reserved exclusively for interactive states and diagnostic status.", "section": "colors" },
+      { "name": "The 11px Legibility Floor Rule", "body": "Functional UI text and medical parameter labels must never fall below 11px.", "section": "typography" },
+      { "name": "The Zero-Glow Halo Rule", "body": "Zero-offset colored box-shadows or text-shadow glows are strictly banned.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do maintain WCAG AA contrast ratio (≥ 4.5:1 for body copy).",
+      "Do use SF Pro / Apple system font hierarchy.",
+      "Do enforce exponential smooth easing curve."
+    ],
+    "donts": [
+      "Don't use colored border-left or border-right accent stripes (> 1px) on cards.",
+      "Don't use gradient text.",
+      "Don't add pulsing status dot animations.",
+      "Don't use bounce or elastic easing."
+    ]
+  }
+}

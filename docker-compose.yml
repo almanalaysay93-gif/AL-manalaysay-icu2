@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  drips-app:
+    build: .
+    container_name: drips_icu_app
+    ports:
+      - "3000:3000"
+    restart: always

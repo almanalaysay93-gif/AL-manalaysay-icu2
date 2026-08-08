@@ -1378,7 +1378,15 @@ function attachCalcListeners(drug) {
   const customTotalVolEl = document.getElementById('customTotalVol');
   const customDoseUnitEl = document.getElementById('customDoseUnit');
 
-  const recalc = () => recalculate(drug);
+  let recalcScheduled = false;
+  const recalc = () => {
+    if (recalcScheduled) return;
+    recalcScheduled = true;
+    requestAnimationFrame(() => {
+      recalcScheduled = false;
+      recalculate(drug);
+    });
+  };
 
   if (weightEl) {
     weightEl.addEventListener('input', (e) => { state.weight = e.target.value; recalc(); });

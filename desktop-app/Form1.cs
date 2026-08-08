@@ -49,7 +49,9 @@ namespace AL_Manalaysay_ICU_Desktop
 
             try
             {
-                string dataFolder = Path.Combine(Path.GetTempPath(), "AL_Manalaysay_ICU_App_" + Process.GetCurrentProcess().Id);
+                string dataFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "AL_Manalaysay_ICU_App", "WebView2");
                 CoreWebView2Environment env = null;
                 try
                 {
@@ -63,7 +65,7 @@ namespace AL_Manalaysay_ICU_Desktop
                 await webView.EnsureCoreWebView2Async(env);
 
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+                webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 webView.CoreWebView2.Settings.IsZoomControlEnabled = true;
 
                 string wwwrootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
