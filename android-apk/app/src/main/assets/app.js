@@ -1,6 +1,6 @@
 /* ============================================================
    ICU Drip Rate Calculator — Application Logic
-   Based on SPMC Drips Computations Reference
+   Based on Standard ICU Drip Computation References
    ============================================================ */
 
 // ── Drug Database ──
@@ -158,6 +158,26 @@ const DRUGS = {
     notes: 'Maintenance infusion: 0.1–0.9 mcg/kg/min. Both α and β agonist.',
   },
 
+  vasopressin: {
+    name: 'Vasopressin',
+    generic: 'Argipressin / Antidiuretic Hormone',
+    category: 'vasopressor',
+    categoryLabel: 'Vasopressor',
+    icon: '💉',
+    formulation: '20 units / 1 mL vial',
+    doseUnit: 'units/min',
+    weightBased: false,
+    formulaType: 'unitsPerMin',
+    doseRange: { min: 0.01, max: 0.06 },
+    concentrations: {
+      '100cc': [
+        { label: 'Standard (20u/100mL)', drugUnits: 20, drugVol: 1, diluent: 99, totalVol: 100, concUnitsPerCc: 0.2, concNote: '20 units (1 mL of 20 u/mL vial) + 99 mL diluent = 100 mL (0.2 units/mL)' },
+        { label: 'Fluid-Restricted (40u/100mL)', drugUnits: 40, drugVol: 2, diluent: 98, totalVol: 100, concUnitsPerCc: 0.4, concNote: '40 units (2 mL of 20 u/mL vial) + 98 mL diluent = 100 mL (0.4 units/mL)' },
+      ],
+    },
+    notes: 'Non-adrenergic, non-weight-based second-line vasopressor for septic/vasodilatory shock. Usually run as a fixed dose (standard 0.03 units/min), not continually titrated. Give via central line only (vesicant — extravasation risk). Monitor MAP, digit/skin perfusion, urine output, and serum sodium (hyponatremia risk from V2-receptor water retention).',
+  },
+
   isoket: {
     name: 'Isoket',
     generic: 'Isosorbide Dinitrate',
@@ -271,16 +291,16 @@ const DRUGS = {
     concentrations: {
       '250cc': [
         { label: 'Standard', drugMg: 600, drugVol: 12, diluent: 238, totalVol: 250, concMgPerCc: 2.4, concMcgPerCc: 2400, concNote: '600 mg + D5W 238 cc, run over 24 hrs (25 mg/hr)' },
-        { label: 'High', drugMg: 1000, drugVol: 50, diluent: 200, totalVol: 250, concMgPerCc: 4.0, concMcgPerCc: 4000 },
-        { label: 'Double', drugMg: 2000, drugVol: 100, diluent: 150, totalVol: 250, concMgPerCc: 8.0, concMcgPerCc: 8000 },
+        { label: 'High', drugMg: 1000, drugVol: 20, diluent: 230, totalVol: 250, concMgPerCc: 4.0, concMcgPerCc: 4000 },
+        { label: 'Double', drugMg: 2000, drugVol: 40, diluent: 210, totalVol: 250, concMgPerCc: 8.0, concMcgPerCc: 8000 },
       ],
       '100cc': [
         { label: 'Standard', drugMg: 400, drugVol: 8, diluent: 92, totalVol: 100, concMgPerCc: 4.0, concMcgPerCc: 4000 },
         { label: 'Double', drugMg: 800, drugVol: 16, diluent: 84, totalVol: 100, concMgPerCc: 8.0, concMcgPerCc: 8000 },
       ],
       '50cc': [
-        { label: 'Standard', drugMg: 200, drugVol: 10, diluent: 40, totalVol: 50, concMgPerCc: 4.0, concMcgPerCc: 4000 },
-        { label: 'Double', drugMg: 400, drugVol: 20, diluent: 30, totalVol: 50, concMgPerCc: 8.0, concMcgPerCc: 8000 },
+        { label: 'Standard', drugMg: 200, drugVol: 4, diluent: 46, totalVol: 50, concMgPerCc: 4.0, concMcgPerCc: 4000 },
+        { label: 'Double', drugMg: 400, drugVol: 8, diluent: 42, totalVol: 50, concMgPerCc: 8.0, concMcgPerCc: 8000 },
       ],
     },
     notes: 'Standard protocol: 150 mg bolus → 1 mg/min × 6 hrs → 0.5 mg/min × 18 hrs.',
@@ -592,6 +612,13 @@ function calculateDoseToRate(drug, dose, weight, concentration) {
       }
       return { rate, unit: 'cc/hr', conc, concUnit: 'units/cc' };
     }
+    case 'unitsPerMin': {
+      // FR (cc/hr) = dose(units/min) × 60 / concentration(units/cc)
+      const conc = concentration.concUnitsPerCc;
+      if (!conc) return null;
+      const rate = (dose * 60) / conc;
+      return { rate, unit: 'cc/hr', conc, concUnit: 'units/cc' };
+    }
     default:
       return null;
   }
@@ -635,6 +662,12 @@ function calculateRateToDose(drug, rate, weight, concentration) {
         dose = rate * conc;
       }
       return { dose, unit: state.heparinMode === 'unitsPerKgPerHr' ? 'units/kg/hr' : 'units/hr', conc, concUnit: 'units/cc' };
+    }
+    case 'unitsPerMin': {
+      const conc = concentration.concUnitsPerCc;
+      if (!conc) return null;
+      const dose = (rate * conc) / 60;
+      return { dose, unit: drug.doseUnit, conc, concUnit: 'units/cc' };
     }
     default:
       return null;
@@ -778,6 +811,8 @@ function selectCategory(key) {
 function openCalculator(drugKey) {
   const drug = DRUGS[drugKey];
   if (!drug) return;
+
+  showDisclaimer();
 
   state.selectedDrug = drugKey;
   state.calcMode = 'doseToRate';
@@ -1482,11 +1517,11 @@ function recalculate(drug) {
       } else if (['dosePerHour', 'dosePerMin'].includes(drug.formulaType)) {
         concMg = amt / vol;
         concMcg = (amt * 1000) / vol;
-      } else if (drug.formulaType === 'heparin') {
+      } else if (['heparin', 'unitsPerMin'].includes(drug.formulaType)) {
         concUnits = amt / vol;
       }
 
-      const concText = drug.formulaType === 'heparin'
+      const concText = ['heparin', 'unitsPerMin'].includes(drug.formulaType)
         ? `${formatNumber(concUnits)} U/cc`
         : ['weightPerMin', 'weightPerHour'].includes(drug.formulaType)
           ? `${formatNumber(concMcg)} mcg/cc (${formatNumber(concMg, 3)} mg/cc)`
@@ -1820,6 +1855,11 @@ function generateDosingTableData(drug) {
     for (let d = minDose; d <= maxDose; d++) {
       doseList.push(d);
     }
+  } else if (drug.formulaType === 'unitsPerMin') {
+    // Fixed-dose vasopressor — standard titration steps only
+    [0.01, 0.02, 0.03, 0.04, 0.06].forEach(p => {
+      if (p >= minDose && p <= maxDose) doseList.push(p);
+    });
   } else if (maxDose <= 3) {
     // Fine-grained decimal steps for Levophed / Epinephrine
     const presets = [0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0];
@@ -1872,6 +1912,10 @@ function generateDosingTableData(drug) {
       proofText = isWeight
         ? `(${d} × ${weight}) ÷ ${formatNumber(concVal)} = ${formatNumber(rateVal, 2)} cc/hr`
         : `${d} ÷ ${formatNumber(concVal)} = ${formatNumber(rateVal, 2)} cc/hr`;
+    } else if (drug.formulaType === 'unitsPerMin') {
+      const hourlyUnits = d * 60;
+      hourlyDrugText = `${formatNumber(hourlyUnits, 2)} units/hr`;
+      proofText = `(${d} × 60) ÷ ${formatNumber(concVal, 3)} = ${formatNumber(rateVal, 2)} cc/hr`;
     }
 
     rows.push({
@@ -1942,6 +1986,69 @@ function copyDosingTableTSV() {
   } else {
     alert('✅ Dosing Table TSV data ready for spreadsheet paste.');
   }
+}
+
+function printDosingTable() {
+  const drug = DRUGS[state.selectedDrug];
+  if (!drug) return;
+
+  const data = generateDosingTableData(drug);
+  if (!data || !data.rows) return;
+
+  const rowsHtml = data.rows.map(r => `
+    <tr>
+      <td>${r.doseFormatted}</td>
+      <td>${r.rateFormatted} cc/hr</td>
+      <td>${r.macroGttsFormatted} gtts/min</td>
+      <td>${r.microGttsFormatted} gtts/min</td>
+      <td>${r.hourlyDrugFormatted}</td>
+      <td>${r.formulaProof}</td>
+    </tr>
+  `).join('');
+
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
+  if (!printWindow) {
+    alert('Please allow pop-ups to print the dosing table.');
+    return;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${drug.name} Dosing Table</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+        h1 { font-size: 18px; margin-bottom: 4px; }
+        .sub { font-size: 12px; color: #555; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+        th { background: #f97316; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+      </style>
+    </head>
+    <body>
+      <h1>AL Manalaysay ICU Drip Calculator — Bedside Dosing Table</h1>
+      <div class="sub">${drug.name} (${drug.generic}) — ${data.concLabel} | Weight: ${data.weight ? data.weight + ' kg' : 'Standard'}</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Dose (${drug.doseUnit})</th>
+            <th>Flow Rate (cc/hr)</th>
+            <th>Macro Drip (15 gtts/min)</th>
+            <th>Micro Drip (60 gtts/min)</th>
+            <th>Hourly Infused Drug</th>
+            <th>Computation Formula Proof</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
 }
 
 function toggleFormulaBreakdown() {
@@ -2133,6 +2240,52 @@ function generateFormulaBreakdownHTML(drug, calcMode, conc, weight, dose, rate, 
 
       finalValText = `${formatNumber(doseVal, 2)} ${isWeightBased ? 'Units/kg/hr' : 'Units/hr'}`;
     }
+  } else if (drug.formulaType === 'unitsPerMin') {
+    const concVal = conc.concUnitsPerCc || 0.2;
+
+    if (isDoseToRate) {
+      equationText = `Rate (cc/hr) = (Dose (units/min) × 60) ÷ Concentration (units/cc)`;
+
+      steps.push({
+        num: 'Step 1: Concentration Resolution',
+        desc: conc.concNote || `Concentration in units/cc`,
+        math: `Conc = ${formatNumber(concVal, 3)} units/cc`
+      });
+
+      const unitsPerHr = formatNumber(dose * 60, 2);
+      steps.push({
+        num: 'Step 2: Calculate Hourly Dose',
+        desc: `Dose = ${dose} units/min × 60 min = ${unitsPerHr} units/hr`,
+        math: `${unitsPerHr} units/hr`
+      });
+
+      const rateVal = (dose * 60) / concVal;
+      steps.push({
+        num: 'Step 3: Solve Flow Rate',
+        desc: `Rate = Hourly Dose ÷ Concentration`,
+        math: `${unitsPerHr} ÷ ${formatNumber(concVal, 3)} = ${formatNumber(rateVal, 2)} cc/hr`
+      });
+
+      finalValText = `${formatNumber(rateVal, 2)} cc/hr`;
+    } else {
+      equationText = `Dose (units/min) = (Rate (cc/hr) × Concentration (units/cc)) ÷ 60`;
+
+      steps.push({
+        num: 'Step 1: Concentration Resolution',
+        desc: `Concentration = ${formatNumber(concVal, 3)} units/cc`,
+        math: `Conc = ${formatNumber(concVal, 3)} units/cc`
+      });
+
+      const totalUnitsPerHr = rate * concVal;
+      const doseVal = totalUnitsPerHr / 60;
+      steps.push({
+        num: 'Step 2: Solve Delivered Dose',
+        desc: `(${rate} × ${formatNumber(concVal, 3)}) ÷ 60`,
+        math: `${formatNumber(doseVal, 3)} ${drug.doseUnit}`
+      });
+
+      finalValText = `${formatNumber(doseVal, 3)} ${drug.doseUnit}`;
+    }
   }
 
   html += `
@@ -2295,7 +2448,7 @@ function renderQuickRef() {
           <span class="converter-label">cmH₂O</span>
         </div>
       </div>
-      <div style="font-size:0.75rem; color:var(--gray-400); text-align:center;">Normal CVP: 6–12 cmH₂O. cmH₂O = mmHg ÷ 1.5</div>
+      <div style="font-size:0.75rem; color:var(--gray-400); text-align:center;">Normal CVP: 6–12 cmH₂O. cmH₂O = mmHg × 1.36</div>
     </div>
 
     <!-- MAP Calculator -->
@@ -2440,11 +2593,11 @@ function attachConverterListeners() {
   if (convMmhg && convCmh2o) {
     convMmhg.addEventListener('input', () => {
       const v = parseFloat(convMmhg.value);
-      convCmh2o.value = isNaN(v) ? '' : formatNumber(v / 1.5);
+      convCmh2o.value = isNaN(v) ? '' : formatNumber(v * 1.36);
     });
     convCmh2o.addEventListener('input', () => {
       const v = parseFloat(convCmh2o.value);
-      convMmhg.value = isNaN(v) ? '' : formatNumber(v * 1.5);
+      convMmhg.value = isNaN(v) ? '' : formatNumber(v / 1.36);
     });
   }
 
@@ -2716,6 +2869,17 @@ function clearSearch() {
   renderDrugGrid();
 }
 
+// ── Liability Disclaimer (shown every time a drug is selected) ──
+function agreeDisclaimer() {
+  const overlay = document.getElementById('disclaimerOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function showDisclaimer() {
+  const overlay = document.getElementById('disclaimerOverlay');
+  if (overlay) overlay.classList.add('open');
+}
+
 // ── Initialization ──
 function init() {
   renderCategoryPills();
@@ -2744,6 +2908,7 @@ function init() {
       closeCalculator();
       closeQuickRef();
       closeMathCalc();
+      if (typeof closeChatbot === 'function') closeChatbot();
     } else if (isMathOpen) {
       if (e.key >= '0' && e.key <= '9') mathCalcInput(e.key);
       else if (e.key === '.' || e.key === ',') mathCalcInput('.');
