@@ -1,4 +1,4 @@
-package com.example.almanalaysayicu
+package com.almanalaysay.icudripcalculator
 
 import android.os.Bundle
 import android.webkit.WebResourceRequest

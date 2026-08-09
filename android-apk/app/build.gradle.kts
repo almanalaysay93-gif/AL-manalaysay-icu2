@@ -3,10 +3,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.almanalaysayicu"
+    namespace = "com.almanalaysay.icudripcalculator"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.almanalaysayicu"
+        applicationId = "com.almanalaysay.icudripcalculator"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
