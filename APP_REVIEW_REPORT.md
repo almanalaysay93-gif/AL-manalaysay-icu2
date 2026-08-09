@@ -1,6 +1,6 @@
 # 🩺 Comprehensive App Review & Google Play Store Audit Report
 
-**Application Name:** AL Manalaysay ICU Drip Calculator & Pharmacy Guide  
+**Application Name:** ICU Drip Calculator by AL  
 **Package ID:** `com.almanalaysay.icudripcalculator`  
 **Target SDK:** Android 16 (API Level 36)  
 **Audit Date:** August 9, 2026  

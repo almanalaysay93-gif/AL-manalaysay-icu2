@@ -1,6 +1,6 @@
 # 📱 Google Play Store Submission & Release Guide
 
-This document certifies that the **AL Manalaysay ICU Drip Calculator** Android project has been audit-checked, refactored, and configured for compliance with Google Play Store policies and technical requirements.
+This document certifies that the **ICU Drip Calculator by AL** Android project has been audit-checked, refactored, and configured for compliance with Google Play Store policies and technical requirements.
 
 ---
 
