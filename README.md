@@ -1,4 +1,4 @@
-# AL Manalaysay ICU — Drip Rate Calculator
+# Al ICU Calculator
 
 A comprehensive ICU drip rate calculator for bedside clinical use. Computes infusion rates for 16+ critical care drugs based on standard ICU clinical protocols.
 
