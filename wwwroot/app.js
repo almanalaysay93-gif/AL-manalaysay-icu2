@@ -1950,7 +1950,7 @@ function exportDosingTableCSV() {
 
   // UTF-8 BOM so Excel opens special characters (* and /) cleanly
   let csv = "\uFEFF";
-  csv += `AL Manalaysay ICU Drip Calculator — Bedside Dosing Table\n`;
+  csv += `Al ICU Calculator — Bedside Dosing Table\n`;
   csv += `Medication: ${drug.name} (${drug.generic})\n`;
   csv += `Concentration: ${data.concLabel}\n`;
   csv += `Patient Weight: ${data.weight ? data.weight + ' kg' : 'Standard'}\n\n`;
@@ -2036,7 +2036,7 @@ function printDosingTable() {
       </style>
     </head>
     <body>
-      <h1>AL Manalaysay ICU Drip Calculator — Bedside Dosing Table</h1>
+      <h1>Al ICU Calculator — Bedside Dosing Table</h1>
       <div class="sub">${drug.name} (${drug.generic}) — ${data.concLabel} | Weight: ${data.weight ? data.weight + ' kg' : 'Standard'}</div>
       <table>
         <thead>
