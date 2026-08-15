@@ -2929,4 +2929,34 @@ function init() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  try {
+    const saved = localStorage.getItem('icu_user_rating');
+    if (saved) {
+      submitAppRating(parseInt(saved, 10));
+    }
+  } catch (e) {}
+});
+
+// ── Interactive User Rating Engine ──
+function submitAppRating(stars) {
+  const picker = document.getElementById('starPicker');
+  const msg = document.getElementById('ratingStatusMsg');
+  if (!picker || !msg) return;
+
+  const starBtns = picker.querySelectorAll('.star-btn');
+  starBtns.forEach((btn, index) => {
+    if (index < stars) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  try {
+    localStorage.setItem('icu_user_rating', stars.toString());
+  } catch (e) {}
+
+  msg.innerHTML = `<span style="color: #22c55e; font-weight:700;">Thank you! You rated ${stars}/5 Stars ★</span>`;
+}

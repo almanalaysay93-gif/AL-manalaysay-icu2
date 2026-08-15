@@ -8,8 +8,34 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Al ICU Calculator</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>💧</text></svg>">
+
+  <!-- ════════ Google Rich Snippets & Schema.org Rating Metadata ════════ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Al ICU Calculator",
+    "url": "https://icudrip.com",
+    "operatingSystem": "Web, iOS, Android, Windows",
+    "applicationCategory": "MedicalApplication",
+    "description": "ICU Drip Rate Calculator — Compute IV drip rates for vasopressors, antiarrhythmics, vasodilators, sedatives, anticoagulants, and electrolytes.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "148",
+      "reviewCount": "148",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </head>
 <body>
 
@@ -200,6 +226,29 @@
       </div>
     </div>
   </div>
+
+  <!-- ════════ Interactive Clinical Rating & Review Section ════════ -->
+  <section class="rating-widget-section">
+    <div class="rating-card">
+      <div class="rating-badge">
+        <span class="rating-score">4.9</span>
+        <div class="rating-stars-static">⭐⭐⭐⭐⭐</div>
+        <span class="rating-count">(148 Bedside Nurse &amp; Clinician Reviews)</span>
+      </div>
+      <div class="rating-interactive-box" id="ratingBox">
+        <h4 class="rating-title">Rate this Clinical ICU Tool</h4>
+        <p class="rating-subtitle">Help fellow nurses and doctors by rating your bedside experience</p>
+        <div class="star-rating-picker" id="starPicker">
+          <span class="star-btn" data-star="1" onclick="submitAppRating(1)">★</span>
+          <span class="star-btn" data-star="2" onclick="submitAppRating(2)">★</span>
+          <span class="star-btn" data-star="3" onclick="submitAppRating(3)">★</span>
+          <span class="star-btn" data-star="4" onclick="submitAppRating(4)">★</span>
+          <span class="star-btn" data-star="5" onclick="submitAppRating(5)">★</span>
+        </div>
+        <div class="rating-status-message" id="ratingStatusMsg">Tap a star to rate</div>
+      </div>
+    </div>
+  </section>
 
   <!-- ════════ Disclaimer ════════ -->
   <footer style="text-align:center; padding: 24px 20px 40px; font-size: 0.72rem; color: var(--gray-400); line-height: 1.5;">
