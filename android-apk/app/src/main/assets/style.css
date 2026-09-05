@@ -956,6 +956,51 @@ body {
   pointer-events: none;
 }
 
+/* ── Quick-Tap Preset Chips & Rows ── */
+.quick-presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.preset-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  margin-right: 2px;
+}
+
+.preset-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--orange-600);
+  background: var(--orange-50);
+  border: 1px solid var(--orange-200);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.preset-chip-btn:hover {
+  background: var(--orange-500);
+  color: var(--white);
+  border-color: var(--orange-500);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.preset-chip-btn:active {
+  transform: translateY(0);
+}
+
 /* ── Concentration Selector ── */
 .conc-grid {
   display: grid;

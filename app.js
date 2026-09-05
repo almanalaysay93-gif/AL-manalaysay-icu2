@@ -994,168 +994,641 @@ function renderCalculatorPanel(drug) {
   attachCalcListeners(drug);
 }
 
+function setBasicInput(id, val) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.value = val;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
+function setBasicMultiInputs(pairs) {
+  Object.entries(pairs).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = val;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+}
+
 function renderBasicFormulaPanel(drug) {
   let html = '';
   const ex = drug.example || {};
+  const isForward = state.calcMode !== 'rateToDose';
 
   if (drug.formulaType === 'tabletCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Prescribed Dose</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || ''}" step="any" min="0">
-            <span class="input-suffix">mg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Available Dose per Tablet</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || ''}" step="any" min="0">
-            <span class="input-suffix">mg/tab</span>
-          </div>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Dose → Tablets (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Tablets → Dose (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Prescribed Dose</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || 500}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 650)">650 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000 mg</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Available Dose per Tablet</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || 250}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg/tab</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Strength:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000 mg</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Number of Tablets Administered</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicGivenTabs" placeholder="e.g. 2" value="2" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">tablets</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 0.5)">0.5 tab</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 1)">1 tab</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 1.5)">1.5 tabs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 2)">2 tabs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 3)">3 tabs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicGivenTabs', 4)">4 tabs</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Available Dose per Tablet</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || 250}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg/tab</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Strength:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000 mg</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   } else if (drug.formulaType === 'liquidCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Prescribed Dose</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 250" value="${ex.prescribed || ''}" step="any" min="0">
-            <span class="input-suffix">mg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Available Dose</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 125" value="${ex.available || ''}" step="any" min="0">
-            <span class="input-suffix">mg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">3. Volume Available</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicAvailVol" placeholder="e.g. 5" value="${ex.availVol || ''}" step="any" min="0">
-            <span class="input-suffix">mL</span>
-          </div>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Dose → Volume (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Volume → Dose (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Prescribed Dose</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 250" value="${ex.prescribed || 250}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 375)">375 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750 mg</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Stock Suspension Strength</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (mg)" value="${ex.available || 125}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mg</span>
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (mL)" value="${ex.availVol || 5}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mL</span>
+              </div>
+            </div>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Standard Stock:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100mg / 1mL</button>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Volume Administered</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 10" value="10" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 2.5)">2.5 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 5)">5 mL (1 tsp)</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 7.5)">7.5 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 10)">10 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 15)">15 mL (1 tbsp)</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 20)">20 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Stock Suspension Strength</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (mg)" value="${ex.available || 125}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mg</span>
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (mL)" value="${ex.availVol || 5}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mL</span>
+              </div>
+            </div>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Standard Stock:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100mg / 1mL</button>
+          </div>
+        </div>
+      `;
+    }
   } else if (drug.formulaType === 'injectionCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Prescribed Dose</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || ''}" step="any" min="0">
-            <span class="input-suffix">mg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Available Vial Dose</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 1000" value="${ex.available || ''}" step="any" min="0">
-            <span class="input-suffix">mg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">3. Available Diluent Volume</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicAvailVol" placeholder="e.g. 10" value="${ex.availVol || ''}" step="any" min="0">
-            <span class="input-suffix">mL</span>
-          </div>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Dose → Diluent Vol (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Injected Vol → Dose (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Prescribed Dose</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || 500}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000 mg (1g)</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 2000)">2,000 mg (2g)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Available Vial & Diluent Volume</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (mg)" value="${ex.available || 1000}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mg</span>
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (mL)" value="${ex.availVol || 10}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mL</span>
+              </div>
+            </div>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Vial Stock:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500mg / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1g / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1g / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2g / 20mL</button>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Volume Injected / Administered</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 5" value="5" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 2)">2 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 5)">5 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 10)">10 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 15)">15 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAdminVol', 20)">20 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Available Vial & Diluent Volume</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (mg)" value="${ex.available || 1000}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mg</span>
+              </div>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <div class="input-wrapper">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (mL)" value="${ex.availVol || 10}" step="any" min="0" inputmode="decimal">
+                <span class="input-suffix">mL</span>
+              </div>
+            </div>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Vial Stock:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500mg / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500mg / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1g / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1g / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2g / 20mL</button>
+          </div>
+        </div>
+      `;
+    }
   } else if (drug.formulaType === 'ivFlowRateCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Total Volume</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || ''}" step="any" min="0">
-            <span class="input-suffix">mL</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Time Duration</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicTimeHours" placeholder="e.g. 8" value="${ex.hours || ''}" step="any" min="0">
-            <span class="input-suffix">hours</span>
-          </div>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Time → Flow Rate (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Rate → Infusion Time (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Total Volume to Infuse</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || 1000}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Volume:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 100)">100 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 250)">250 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 500)">500 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 1000)">1,000 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 2000)">2,000 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Infusion Time Duration</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTimeHours" placeholder="e.g. 8" value="${ex.hours || 8}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">hours</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Duration:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 1)">1 hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 2)">2 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 4)">4 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 6)">6 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 8)">8 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 12)">12 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTimeHours', 24)">24 hrs</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Total Volume to Infuse</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || 1000}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Volume:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 100)">100 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 250)">250 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 500)">500 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 1000)">1,000 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Pump Flow Rate</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicPumpRate" placeholder="e.g. 125" value="125" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL/hr</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Flow Rate:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 42)">42 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 63)">63 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 75)">75 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 83)">83 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 100)">100 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 125)">125 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 150)">150 mL/hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPumpRate', 200)">200 mL/hr</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   } else if (drug.formulaType === 'dropRateCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Total Volume</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || ''}" step="any" min="0">
-            <span class="input-suffix">mL</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Drop Factor</div>
-        <div class="input-group">
-          <select class="input-field" id="basicDropFactor" style="background: rgba(15,23,42,0.8); color: #fff;">
-            <option value="10">10 gtt/mL (Macro drip)</option>
-            <option value="15">15 gtt/mL (Macro drip)</option>
-            <option value="20" selected>20 gtt/mL (Standard macro drip)</option>
-            <option value="60">60 gtt/mL (Micro drip / Pediatric)</option>
-          </select>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">3. Infusion Time</div>
-        <div class="input-group">
-          <div class="input-wrapper" style="flex: 2;">
-            <input type="number" class="input-field" id="basicTimeVal" placeholder="e.g. 4" value="${ex.hours || ''}" step="any" min="0">
-          </div>
-          <select class="input-field" id="basicTimeUnit" style="flex: 1; background: rgba(15,23,42,0.8); color: #fff;">
-            <option value="hours" selected>Hours</option>
-            <option value="minutes">Minutes</option>
-          </select>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Time → Drop Rate (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Drop Rate → Time (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Total Volume</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || 500}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Volume:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 100)">100 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 250)">250 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 500)">500 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 1000)">1,000 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Tubing Drop Factor</div>
+          <div class="input-group">
+            <select class="input-field" id="basicDropFactor" style="background: rgba(15,23,42,0.8); color: #fff;">
+              <option value="10">10 gtt/mL (Macro drip)</option>
+              <option value="15">15 gtt/mL (Macro drip)</option>
+              <option value="20" selected>20 gtt/mL (Standard macro drip)</option>
+              <option value="60">60 gtt/mL (Micro drip / Pediatric)</option>
+            </select>
+            <div class="quick-presets-row">
+              <span class="preset-label">Drop Sets:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDropFactor', '10')">10 gtt/mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDropFactor', '15')">15 gtt/mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDropFactor', '20')">20 gtt/mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDropFactor', '60')">60 gtt/mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">3. Infusion Time Duration</div>
+          <div class="input-group">
+            <div style="display: flex; gap: 8px;">
+              <div class="input-wrapper" style="flex: 2;">
+                <input type="number" class="input-field" id="basicTimeVal" placeholder="e.g. 4" value="${ex.hours || 4}" step="any" min="0" inputmode="decimal">
+              </div>
+              <select class="input-field" id="basicTimeUnit" style="flex: 1; background: rgba(15,23,42,0.8); color: #fff;">
+                <option value="hours" selected>Hours</option>
+                <option value="minutes">Minutes</option>
+              </select>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Time:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 1, basicTimeUnit: 'hours'})">1 hr</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 2, basicTimeUnit: 'hours'})">2 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 4, basicTimeUnit: 'hours'})">4 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 6, basicTimeUnit: 'hours'})">6 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 8, basicTimeUnit: 'hours'})">8 hrs</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicTimeVal: 12, basicTimeUnit: 'hours'})">12 hrs</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Total Volume</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || 500}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mL</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Volume:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 100)">100 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 250)">250 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 500)">500 mL</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalVol', 1000)">1,000 mL</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Tubing Drop Factor</div>
+          <div class="input-group">
+            <select class="input-field" id="basicDropFactor" style="background: rgba(15,23,42,0.8); color: #fff;">
+              <option value="10">10 gtt/mL (Macro drip)</option>
+              <option value="15">15 gtt/mL (Macro drip)</option>
+              <option value="20" selected>20 gtt/mL (Standard macro drip)</option>
+              <option value="60">60 gtt/mL (Micro drip / Pediatric)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">3. Observed / Ordered Drop Rate</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTargetGtt" placeholder="e.g. 42" value="42" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">gtt/min</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Drop Rate:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 15)">15 gtt/min</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 21)">21 gtt/min</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 31)">31 gtt/min</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 42)">42 gtt/min</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 63)">63 gtt/min</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTargetGtt', 83)">83 gtt/min</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   } else if (drug.formulaType === 'weightDoseCalc') {
     html += `
-      <div class="calc-section">
-        <div class="calc-section-title">1. Dose Per Kilogram</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicDosePerKg" placeholder="e.g. 15" value="${ex.dosePerKg || ''}" step="any" min="0">
-            <span class="input-suffix">mg/kg</span>
-          </div>
-        </div>
-      </div>
-      <div class="calc-section">
-        <div class="calc-section-title">2. Patient Weight</div>
-        <div class="input-group">
-          <div class="input-wrapper">
-            <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${ex.weight || ''}" step="any" min="0">
-            <span class="input-suffix">kg</span>
-          </div>
-        </div>
+      <div class="mode-switcher">
+        <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+          Dose/kg → Total Dose (Forward)
+        </button>
+        <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+          Total Dose → Dose/kg (Reverse)
+        </button>
       </div>
     `;
+
+    if (isForward) {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Dose Per Kilogram</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicDosePerKg" placeholder="e.g. 15" value="${ex.dosePerKg || 15}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg/kg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Dose/kg:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 5)">5 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 10)">10 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 15)">15 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 20)">20 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 25)">25 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 50)">50 mg/kg</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Patient Body Weight</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${state.weight || ex.weight || 20}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">kg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Weight:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 10)">10 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 20)">20 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 40)">40 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 50)">50 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 60)">60 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 70)">70 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 80)">80 kg</button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="calc-section">
+          <div class="calc-section-title">1. Total Administered Dose</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicTotalGivenDose" placeholder="e.g. 300" value="300" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">mg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Total Dose:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 100)">100 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 250)">250 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 300)">300 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 500)">500 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 750)">750 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 1000)">1,000 mg</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <div class="calc-section-title">2. Patient Body Weight</div>
+          <div class="input-group">
+            <div class="input-wrapper">
+              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${state.weight || ex.weight || 20}" step="any" min="0" inputmode="decimal">
+              <span class="input-suffix">kg</span>
+            </div>
+            <div class="quick-presets-row">
+              <span class="preset-label">Weight:</span>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 10)">10 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 20)">20 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 40)">40 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 50)">50 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 60)">60 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 70)">70 kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicWeight', 80)">80 kg</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   }
 
   return html;
@@ -1713,7 +2186,12 @@ function attachCalcListeners(drug) {
   }
 
   // Basic Formulas Listeners
-  const basicInputs = ['basicPrescribedDose', 'basicAvailableDose', 'basicAvailVol', 'basicTotalVol', 'basicTimeHours', 'basicDropFactor', 'basicTimeVal', 'basicTimeUnit', 'basicDosePerKg', 'basicWeight'];
+  const basicInputs = [
+    'basicPrescribedDose', 'basicAvailableDose', 'basicAvailVol', 'basicTotalVol',
+    'basicTimeHours', 'basicDropFactor', 'basicTimeVal', 'basicTimeUnit',
+    'basicDosePerKg', 'basicWeight', 'basicGivenTabs', 'basicAdminVol',
+    'basicPumpRate', 'basicTargetGtt', 'basicTotalGivenDose'
+  ];
   basicInputs.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -1721,6 +2199,697 @@ function attachCalcListeners(drug) {
       el.addEventListener('change', recalc);
     }
   });
+
+  // Trigger initial calculation when panel loads
+  recalc();
+}
+
+function recalculateBasicFormula(drug, resultEl) {
+  const isForward = state.calcMode !== 'rateToDose';
+  let resultCardHTML = '';
+  let equationText = '';
+  let steps = [];
+  let finalValText = '';
+
+  if (drug.formulaType === 'tabletCalc') {
+    if (isForward) {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      if (isNaN(pres) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = pres / avail;
+      const whole = Math.floor(qty);
+      const frac = qty % 1;
+      const fracText = frac === 0 ? `${qty} Whole Tablets` : `${whole > 0 ? whole + ' Whole + ' : ''}${formatNumber(frac, 2)} Tablet`;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Tablet Quantity</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">Tablets / Capsules</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Prescribed Dose</div>
+              <div class="result-detail-value">${pres} mg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Available Strength</div>
+              <div class="result-detail-value">${avail} mg/tab</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Tablet Breakdown</div>
+              <div class="result-detail-value">${fracText}</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Prescribed ÷ Available</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Required Quantity (Tabs) = Prescribed Dose (mg) ÷ Available Dose per Tablet (mg/tab)`;
+      steps = [
+        {
+          num: 'Step 1: Clinical Values',
+          desc: `Prescribed = ${pres} mg, Available Tablet Strength = ${avail} mg/tab`,
+          math: `Equation: Quantity = Prescribed ÷ Available`
+        },
+        {
+          num: 'Step 2: Solve Quantity',
+          desc: `Divide prescribed dose by tablet strength`,
+          math: `${pres} mg ÷ ${avail} mg/tab = ${formatNumber(qty, 2)} Tablets`
+        },
+        {
+          num: 'Step 3: Clinical Administration',
+          desc: frac === 0 ? 'Administer exact whole tablets' : 'Split score line or adjust with liquid formulation if available',
+          math: fracText
+        }
+      ];
+      finalValText = `${formatNumber(qty, 2)} Tablets (${fracText})`;
+    } else {
+      const tabs = parseFloat(document.getElementById('basicGivenTabs')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      if (isNaN(tabs) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      const totalDose = tabs * avail;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Delivered Total Dose</div>
+          <div class="result-value">${formatNumber(totalDose, 2)}</div>
+          <div class="result-unit">mg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Tablets Given</div>
+              <div class="result-detail-value">${tabs} tabs</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Available Strength</div>
+              <div class="result-detail-value">${avail} mg/tab</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Tablets × Available Strength</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${tabs} tabs × ${avail} mg</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Delivered Dose (mg) = Number of Tablets × Available Dose per Tablet (mg/tab)`;
+      steps = [
+        {
+          num: 'Step 1: Identify Given Units',
+          desc: `Administered Tablets = ${tabs} tabs, Tablet Strength = ${avail} mg/tab`,
+          math: `Equation: Delivered Dose = Tablets × Strength`
+        },
+        {
+          num: 'Step 2: Multiply Dosage',
+          desc: `Multiply administered tablets by strength per tablet`,
+          math: `${tabs} tabs × ${avail} mg/tab = ${formatNumber(totalDose, 2)} mg`
+        }
+      ];
+      finalValText = `${formatNumber(totalDose, 2)} mg`;
+    }
+  } else if (drug.formulaType === 'liquidCalc') {
+    if (isForward) {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = (pres / avail) * vol;
+      const conc = avail / vol;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Liquid Volume</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">mL (Liquid / Suspension)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Stock Concentration</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Household Teaspoon</div>
+              <div class="result-detail-value">${formatNumber(qty / 5, 1)} tsp (${formatNumber(qty / 15, 1)} tbsp)</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Prescribed Dose</div>
+              <div class="result-detail-value">${pres} mg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Stock Formulation</div>
+              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Required Volume (mL) = [Prescribed Dose (mg) ÷ Available Dose (mg)] × Available Volume (mL)`;
+      steps = [
+        {
+          num: 'Step 1: Concentration Determination',
+          desc: `Stock bottle contains ${avail} mg in ${vol} mL`,
+          math: `Stock Conc = ${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+        },
+        {
+          num: 'Step 2: Calculate Dose Ratio',
+          desc: `Prescribed dose divided by available dose`,
+          math: `${pres} mg ÷ ${avail} mg = ${formatNumber(pres / avail, 4)}`
+        },
+        {
+          num: 'Step 3: Solve Volume to Measure',
+          desc: `Multiply dose ratio by available volume`,
+          math: `(${pres} ÷ ${avail}) × ${vol} mL = ${formatNumber(qty, 2)} mL`
+        },
+        {
+          num: 'Step 4: Household Measure Equivalent',
+          desc: `1 teaspoon (tsp) = 5 mL, 1 tablespoon (tbsp) = 15 mL`,
+          math: `${formatNumber(qty, 2)} mL ÷ 5 = ${formatNumber(qty / 5, 1)} tsp`
+        }
+      ];
+      finalValText = `${formatNumber(qty, 2)} mL (${formatNumber(qty / 5, 1)} tsp)`;
+    } else {
+      const adminVol = parseFloat(document.getElementById('basicAdminVol')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { resultEl.innerHTML = ''; return; }
+      const dose = (adminVol / vol) * avail;
+      const conc = avail / vol;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Delivered Liquid Dose</div>
+          <div class="result-value">${formatNumber(dose, 2)}</div>
+          <div class="result-unit">mg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Administered Volume</div>
+              <div class="result-detail-value">${adminVol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Stock Concentration</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Stock Formulation</div>
+              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Formula Proof</div>
+              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} mg</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Delivered Dose (mg) = [Administered Volume (mL) ÷ Available Volume (mL)] × Available Dose (mg)`;
+      steps = [
+        {
+          num: 'Step 1: Stock Concentration',
+          desc: `${avail} mg in ${vol} mL`,
+          math: `${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+        },
+        {
+          num: 'Step 2: Solve Delivered Dose',
+          desc: `Multiply administered volume by stock concentration`,
+          math: `${adminVol} mL × ${formatNumber(conc, 2)} mg/mL = ${formatNumber(dose, 2)} mg`
+        }
+      ];
+      finalValText = `${formatNumber(dose, 2)} mg`;
+    }
+  } else if (drug.formulaType === 'injectionCalc') {
+    if (isForward) {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = (pres / avail) * vol;
+      const conc = avail / vol;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Injectable Volume</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">mL (IV / IM Vial)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Vial Concentration</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Prescribed Dose</div>
+              <div class="result-detail-value">${pres} mg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Vial Total Strength</div>
+              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Formula Proof</div>
+              <div class="result-detail-value">(${pres} ÷ ${avail}) × ${vol} mL</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Required Volume (mL) = [Prescribed Dose (mg) ÷ Available Dose (mg)] × Diluent Volume (mL)`;
+      steps = [
+        {
+          num: 'Step 1: Reconstitution Concentration',
+          desc: `Reconstituted vial contains ${avail} mg in ${vol} mL diluent`,
+          math: `Vial Conc = ${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+        },
+        {
+          num: 'Step 2: Solve Injectable Volume',
+          desc: `Prescribed dose divided by concentration`,
+          math: `${pres} mg ÷ ${formatNumber(conc, 2)} mg/mL = ${formatNumber(qty, 2)} mL`
+        }
+      ];
+      finalValText = `${formatNumber(qty, 2)} mL`;
+    } else {
+      const adminVol = parseFloat(document.getElementById('basicAdminVol')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { resultEl.innerHTML = ''; return; }
+      const dose = (adminVol / vol) * avail;
+      const conc = avail / vol;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Delivered Injected Dose</div>
+          <div class="result-value">${formatNumber(dose, 2)}</div>
+          <div class="result-unit">mg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Volume Injected</div>
+              <div class="result-detail-value">${adminVol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Reconstituted Conc</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Vial Preparation</div>
+              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} mg</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Delivered Dose (mg) = [Injected Volume (mL) ÷ Diluent Volume (mL)] × Vial Dose (mg)`;
+      steps = [
+        {
+          num: 'Step 1: Vial Concentration',
+          desc: `${avail} mg reconstituted in ${vol} mL`,
+          math: `${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+        },
+        {
+          num: 'Step 2: Calculate Administered Dose',
+          desc: `Multiply injected volume by concentration`,
+          math: `${adminVol} mL × ${formatNumber(conc, 2)} mg/mL = ${formatNumber(dose, 2)} mg`
+        }
+      ];
+      finalValText = `${formatNumber(dose, 2)} mg`;
+    }
+  } else if (drug.formulaType === 'ivFlowRateCalc') {
+    if (isForward) {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const hours = parseFloat(document.getElementById('basicTimeHours')?.value);
+      if (isNaN(vol) || isNaN(hours) || hours <= 0) { resultEl.innerHTML = ''; return; }
+      const rate = vol / hours;
+      const macro15 = (rate * 15) / 60;
+      const macro20 = (rate * 20) / 60;
+      const micro60 = rate;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">IV Infusion Flow Rate</div>
+          <div class="result-value">${formatNumber(rate, 2)}</div>
+          <div class="result-unit">mL/hr (cc/hr)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Macro Drip (15 gtt)</div>
+              <div class="result-detail-value">${formatNumber(macro15, 1)} gtt/min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Macro Drip (20 gtt)</div>
+              <div class="result-detail-value">${formatNumber(macro20, 1)} gtt/min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Micro Drip (60 gtt)</div>
+              <div class="result-detail-value">${formatNumber(micro60, 1)} gtt/min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Total Volume</div>
+              <div class="result-detail-value">${vol} mL over ${hours} hrs</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Flow Rate (mL/hr) = Total Infusion Volume (mL) ÷ Infusion Duration (hours)`;
+      steps = [
+        {
+          num: 'Step 1: Clinical Values',
+          desc: `Total Volume = ${vol} mL, Duration = ${hours} hours`,
+          math: `Rate (mL/hr) = Volume ÷ Time`
+        },
+        {
+          num: 'Step 2: Solve Volumetric Pump Rate',
+          desc: `Divide total volume by total duration`,
+          math: `${vol} mL ÷ ${hours} hrs = ${formatNumber(rate, 2)} mL/hr`
+        },
+        {
+          num: 'Step 3: Macro Drip Conversion (15 gtt/mL)',
+          desc: `gtt/min = (Rate × 15) ÷ 60`,
+          math: `(${formatNumber(rate, 2)} × 15) ÷ 60 = ${formatNumber(macro15, 1)} gtt/min`
+        },
+        {
+          num: 'Step 4: Standard Drip Conversion (20 gtt/mL)',
+          desc: `gtt/min = (Rate × 20) ÷ 60`,
+          math: `(${formatNumber(rate, 2)} × 20) ÷ 60 = ${formatNumber(macro20, 1)} gtt/min`
+        }
+      ];
+      finalValText = `${formatNumber(rate, 2)} mL/hr (${formatNumber(macro15, 1)} gtt/min)`;
+    } else {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const rate = parseFloat(document.getElementById('basicPumpRate')?.value);
+      if (isNaN(vol) || isNaN(rate) || rate <= 0) { resultEl.innerHTML = ''; return; }
+      const hours = vol / rate;
+      const hrsInt = Math.floor(hours);
+      const minsInt = Math.round((hours % 1) * 60);
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Total Infusion Duration</div>
+          <div class="result-value">${formatNumber(hours, 2)} hrs</div>
+          <div class="result-unit">(${hrsInt}h ${minsInt}m)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Total Minutes</div>
+              <div class="result-detail-value">${formatNumber(hours * 60, 0)} min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Pump Flow Rate</div>
+              <div class="result-detail-value">${rate} mL/hr</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Total Volume</div>
+              <div class="result-detail-value">${vol} mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${vol} mL ÷ ${rate} mL/hr</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Infusion Duration (hours) = Total Infusion Volume (mL) ÷ Pump Flow Rate (mL/hr)`;
+      steps = [
+        {
+          num: 'Step 1: Parameters',
+          desc: `Volume = ${vol} mL, Pump Flow Rate = ${rate} mL/hr`,
+          math: `Time = Volume ÷ Flow Rate`
+        },
+        {
+          num: 'Step 2: Solve Time in Hours',
+          desc: `Divide volume by rate`,
+          math: `${vol} mL ÷ ${rate} mL/hr = ${formatNumber(hours, 2)} hours`
+        },
+        {
+          num: 'Step 3: Convert to Hours & Minutes',
+          desc: `${formatNumber(hours % 1, 2)} hrs × 60 min`,
+          math: `${hrsInt} hours and ${minsInt} minutes`
+        }
+      ];
+      finalValText = `${formatNumber(hours, 2)} hours (${hrsInt}h ${minsInt}m)`;
+    }
+  } else if (drug.formulaType === 'dropRateCalc') {
+    if (isForward) {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
+      const timeVal = parseFloat(document.getElementById('basicTimeVal')?.value);
+      const timeUnit = document.getElementById('basicTimeUnit')?.value || 'hours';
+      if (isNaN(vol) || isNaN(timeVal) || timeVal <= 0) { resultEl.innerHTML = ''; return; }
+      const timeMin = timeUnit === 'hours' ? timeVal * 60 : timeVal;
+      const gttMin = (vol * dropFactor) / timeMin;
+      const equivRate = vol / (timeMin / 60);
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Gravity Infusion Drop Rate</div>
+          <div class="result-value">${formatNumber(gttMin, 1)}</div>
+          <div class="result-unit">gtt/min (drops/minute)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Pump Equivalent</div>
+              <div class="result-detail-value">${formatNumber(equivRate, 1)} mL/hr</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Tubing Drop Factor</div>
+              <div class="result-detail-value">${dropFactor} gtt/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Total Duration</div>
+              <div class="result-detail-value">${timeMin} min (${formatNumber(timeMin / 60, 2)} hrs)</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Total Infusion Drops</div>
+              <div class="result-detail-value">${formatNumber(vol * dropFactor)} drops</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Drop Rate (gtt/min) = [Total Volume (mL) × Drop Factor (gtt/mL)] ÷ Infusion Time (min)`;
+      steps = [
+        {
+          num: 'Step 1: Calculate Total Drops',
+          desc: `Multiply container volume by tubing calibration factor`,
+          math: `${vol} mL × ${dropFactor} gtt/mL = ${formatNumber(vol * dropFactor)} total drops`
+        },
+        {
+          num: 'Step 2: Convert Duration to Minutes',
+          desc: `${timeVal} ${timeUnit}`,
+          math: `Time = ${timeMin} minutes`
+        },
+        {
+          num: 'Step 3: Solve Gravity Drop Rate',
+          desc: `Total drops divided by total minutes`,
+          math: `${formatNumber(vol * dropFactor)} drops ÷ ${timeMin} min = ${formatNumber(gttMin, 1)} gtt/min`
+        }
+      ];
+      finalValText = `${formatNumber(gttMin, 1)} gtt/min (≈ ${Math.round(gttMin)} drops/min)`;
+    } else {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
+      const targetGtt = parseFloat(document.getElementById('basicTargetGtt')?.value);
+      if (isNaN(vol) || isNaN(targetGtt) || targetGtt <= 0) { resultEl.innerHTML = ''; return; }
+      const totalDrops = vol * dropFactor;
+      const timeMin = totalDrops / targetGtt;
+      const hours = timeMin / 60;
+      const hrsInt = Math.floor(hours);
+      const minsInt = Math.round(timeMin % 60);
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Total Infusion Time</div>
+          <div class="result-value">${formatNumber(hours, 2)} hrs</div>
+          <div class="result-unit">(${hrsInt}h ${minsInt}m)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Total Minutes</div>
+              <div class="result-detail-value">${formatNumber(timeMin, 1)} min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Set Drop Rate</div>
+              <div class="result-detail-value">${targetGtt} gtt/min</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Drop Factor</div>
+              <div class="result-detail-value">${dropFactor} gtt/mL</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Total Drops</div>
+              <div class="result-detail-value">${formatNumber(totalDrops)} drops</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Infusion Time (min) = [Total Volume (mL) × Drop Factor (gtt/mL)] ÷ Drop Rate (gtt/min)`;
+      steps = [
+        {
+          num: 'Step 1: Total Drops',
+          desc: `Volume × Drop Factor`,
+          math: `${vol} mL × ${dropFactor} gtt/mL = ${formatNumber(totalDrops)} drops`
+        },
+        {
+          num: 'Step 2: Solve Time in Minutes',
+          desc: `Total drops divided by drop rate`,
+          math: `${formatNumber(totalDrops)} drops ÷ ${targetGtt} gtt/min = ${formatNumber(timeMin, 1)} min`
+        },
+        {
+          num: 'Step 3: Convert to Hours & Minutes',
+          desc: `${formatNumber(timeMin, 1)} min ÷ 60`,
+          math: `${hrsInt} hours and ${minsInt} minutes`
+        }
+      ];
+      finalValText = `${formatNumber(hours, 2)} hours (${hrsInt}h ${minsInt}m)`;
+    }
+  } else if (drug.formulaType === 'weightDoseCalc') {
+    if (isForward) {
+      const dosePerKg = parseFloat(document.getElementById('basicDosePerKg')?.value);
+      const wt = parseFloat(document.getElementById('basicWeight')?.value);
+      if (isNaN(dosePerKg) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
+      const reqDose = dosePerKg * wt;
+      const grams = reqDose / 1000;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Total Dose</div>
+          <div class="result-value">${formatNumber(reqDose, 2)}</div>
+          <div class="result-unit">mg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Gram Equivalent</div>
+              <div class="result-detail-value">${formatNumber(grams, 3)} grams</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Dose per kg</div>
+              <div class="result-detail-value">${dosePerKg} mg/kg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Patient Weight</div>
+              <div class="result-detail-value">${wt} kg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Daily BID (q12h)</div>
+              <div class="result-detail-value">${formatNumber(reqDose * 2, 2)} mg/day</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Required Total Dose (mg) = Dose per Kilogram (mg/kg) × Patient Weight (kg)`;
+      steps = [
+        {
+          num: 'Step 1: Clinical Values',
+          desc: `Dose Specification = ${dosePerKg} mg/kg, Patient Weight = ${wt} kg`,
+          math: `Total Dose = Dose/kg × Weight`
+        },
+        {
+          num: 'Step 2: Solve Total Dose',
+          desc: `Multiply dose per kg by patient weight`,
+          math: `${dosePerKg} mg/kg × ${wt} kg = ${formatNumber(reqDose, 2)} mg`
+        },
+        {
+          num: 'Step 3: Unit Conversion to Grams',
+          desc: `Divide milligrams by 1000`,
+          math: `${formatNumber(reqDose, 2)} mg ÷ 1000 = ${formatNumber(grams, 3)} g`
+        }
+      ];
+      finalValText = `${formatNumber(reqDose, 2)} mg (${formatNumber(grams, 3)} g)`;
+    } else {
+      const totalGivenDose = parseFloat(document.getElementById('basicTotalGivenDose')?.value);
+      const wt = parseFloat(document.getElementById('basicWeight')?.value);
+      if (isNaN(totalGivenDose) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
+      const deliveredDosePerKg = totalGivenDose / wt;
+
+      resultCardHTML = `
+        <div class="result-card">
+          <div class="result-label">Delivered Dose per kg</div>
+          <div class="result-value">${formatNumber(deliveredDosePerKg, 2)}</div>
+          <div class="result-unit">mg/kg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Total Given Dose</div>
+              <div class="result-detail-value">${totalGivenDose} mg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Patient Weight</div>
+              <div class="result-detail-value">${wt} kg</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Total Dose ÷ Weight</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${totalGivenDose} mg ÷ ${wt} kg</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      equationText = `Delivered Dose per kg (mg/kg) = Total Administered Dose (mg) ÷ Patient Weight (kg)`;
+      steps = [
+        {
+          num: 'Step 1: Clinical Values',
+          desc: `Total Given Dose = ${totalGivenDose} mg, Patient Weight = ${wt} kg`,
+          math: `Dose/kg = Total Dose ÷ Weight`
+        },
+        {
+          num: 'Step 2: Solve Delivered Dose/kg',
+          desc: `Divide total administered dose by patient weight`,
+          math: `${totalGivenDose} mg ÷ ${wt} kg = ${formatNumber(deliveredDosePerKg, 2)} mg/kg`
+        }
+      ];
+      finalValText = `${formatNumber(deliveredDosePerKg, 2)} mg/kg`;
+    }
+  }
+
+  let html = resultCardHTML;
+  html += `
+    <button class="formula-toggle-btn" onclick="toggleFormulaBreakdown()">
+      📐 ${state.showFormulaBreakdown ? 'Hide Computation Formula' : 'Show Computation Formula & Steps'}
+    </button>
+
+    <button class="formula-toggle-btn" style="background: var(--white); border-color: var(--orange-500); color: var(--orange-700);" onclick="openDosingTable()">
+      📊 Generate Dosing Table & Export to Excel / Google Sheets
+    </button>
+  `;
+
+  if (state.showFormulaBreakdown) {
+    html += `
+      <div class="formula-card">
+        <div class="formula-card-header">
+          <div class="formula-card-title">📐 Step-by-Step Computation Formula</div>
+          <button type="button" class="search-clear visible" onclick="toggleFormulaBreakdown()" title="Close breakdown" style="position:static;">✕</button>
+        </div>
+
+        <div class="formula-equation-box">
+          ${equationText}
+        </div>
+
+        <div class="formula-step-list">
+          ${steps.map(s => `
+            <div class="formula-step-item">
+              <div class="formula-step-num">${s.num}</div>
+              <div class="formula-step-desc">${s.desc}</div>
+              <div class="formula-step-math">${s.math}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="formula-final-box">
+          <span>Calculated Result:</span>
+          <span class="formula-final-val">${finalValText}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  resultEl.innerHTML = html;
 }
 
 function recalculate(drug) {
@@ -1729,148 +2898,7 @@ function recalculate(drug) {
 
   // Basic Drug Calculations Made Easy
   if (['tabletCalc', 'liquidCalc', 'injectionCalc', 'ivFlowRateCalc', 'dropRateCalc', 'weightDoseCalc'].includes(drug.formulaType)) {
-    let resultHTML = '';
-    
-    if (drug.formulaType === 'tabletCalc') {
-      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
-      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
-      if (isNaN(pres) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = pres / avail;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">Required Quantity</div>
-          <div class="result-value">${formatNumber(qty, 2)}</div>
-          <div class="result-unit">Tablets / Capsules</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">Prescribed ÷ Available</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">${pres} mg ÷ ${avail} mg/tab</div>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (drug.formulaType === 'liquidCalc') {
-      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
-      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
-      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = (pres / avail) * vol;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">Required Volume</div>
-          <div class="result-value">${formatNumber(qty, 2)}</div>
-          <div class="result-unit">mL (Liquid / Suspension)</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">(Prescribed ÷ Available) × Vol</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">(${pres} mg ÷ ${avail} mg) × ${vol} mL</div>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (drug.formulaType === 'injectionCalc') {
-      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
-      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
-      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = (pres / avail) * vol;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">Required Injectable Vol</div>
-          <div class="result-value">${formatNumber(qty, 2)}</div>
-          <div class="result-unit">mL (IV / IM Vial)</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">(Prescribed ÷ Available) × Vol</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">(${pres} mg ÷ ${avail} mg) × ${vol} mL</div>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (drug.formulaType === 'ivFlowRateCalc') {
-      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
-      const hours = parseFloat(document.getElementById('basicTimeHours')?.value);
-      if (isNaN(vol) || isNaN(hours) || hours <= 0) { resultEl.innerHTML = ''; return; }
-      const rate = vol / hours;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">IV Flow Rate</div>
-          <div class="result-value">${formatNumber(rate, 2)}</div>
-          <div class="result-unit">mL/hr (cc/hr)</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">Total Vol ÷ Time (hrs)</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">${vol} mL ÷ ${hours} hours</div>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (drug.formulaType === 'dropRateCalc') {
-      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
-      const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
-      const timeVal = parseFloat(document.getElementById('basicTimeVal')?.value);
-      const timeUnit = document.getElementById('basicTimeUnit')?.value || 'hours';
-      if (isNaN(vol) || isNaN(timeVal) || timeVal <= 0) { resultEl.innerHTML = ''; return; }
-      const timeMin = timeUnit === 'hours' ? timeVal * 60 : timeVal;
-      const gttMin = (vol * dropFactor) / timeMin;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">Infusion Drop Rate</div>
-          <div class="result-value">${formatNumber(gttMin, 1)}</div>
-          <div class="result-unit">gtt/min (drops/min)</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">(Vol × Drop Factor) ÷ Time (min)</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">(${vol} mL × ${dropFactor} gtt/mL) ÷ ${timeMin} min</div>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (drug.formulaType === 'weightDoseCalc') {
-      const dosePerKg = parseFloat(document.getElementById('basicDosePerKg')?.value);
-      const wt = parseFloat(document.getElementById('basicWeight')?.value);
-      if (isNaN(dosePerKg) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
-      const reqDose = dosePerKg * wt;
-      resultHTML = `
-        <div class="result-card">
-          <div class="result-label">Required Total Dose</div>
-          <div class="result-value">${formatNumber(reqDose, 2)}</div>
-          <div class="result-unit">mg</div>
-          <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Formula</div>
-              <div class="result-detail-value">Dose/kg × Weight (kg)</div>
-            </div>
-            <div class="result-detail">
-              <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">${dosePerKg} mg/kg × ${wt} kg</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    resultEl.innerHTML = resultHTML;
+    recalculateBasicFormula(drug, resultEl);
     return;
   }
 
@@ -2158,23 +3186,27 @@ function openDosingTable(drugKey) {
         <table class="dosing-table">
           <thead>
             <tr>
-              <th style="background: var(--orange-500); color: var(--white);">Column 1: Dose (${drug.doseUnit})</th>
-              <th style="background: var(--gray-800); color: var(--white);">Column 2: Flow Rate (cc/hr)</th>
-              <th>Column 3: Macro Drip (15 gtts/min)</th>
-              <th>Column 4: Micro Drip (60 gtts/min)</th>
-              <th>Column 5: Hourly Infused Drug</th>
-              <th>Column 6: Computation Formula Proof</th>
+              ${(data.customHeaders || [
+                `Column 1: Dose (${drug.doseUnit})`,
+                `Column 2: Flow Rate (cc/hr)`,
+                `Column 3: Macro Drip (15 gtts/min)`,
+                `Column 4: Micro Drip (60 gtts/min)`,
+                `Column 5: Hourly Infused Drug`,
+                `Column 6: Computation Formula Proof`
+              ]).map((h, i) => `
+                <th style="${i === 0 ? 'background: var(--orange-500); color: var(--white);' : i === 1 ? 'background: var(--gray-800); color: var(--white);' : ''}">${h}</th>
+              `).join('')}
             </tr>
           </thead>
           <tbody>
             ${data.rows.map(r => `
               <tr>
-                <td class="dosing-table-highlight" style="font-weight: 800; color: var(--orange-800);">${r.doseFormatted}</td>
-                <td style="font-weight: 800; color: var(--orange-600); font-size: 0.95rem;">${r.rateFormatted} cc/hr</td>
-                <td>${r.macroGttsFormatted} gtts/min</td>
-                <td>${r.microGttsFormatted} gtts/min</td>
-                <td>${r.hourlyDrugFormatted}</td>
-                <td class="dosing-table-math">${r.formulaProof}</td>
+                <td class="dosing-table-highlight" style="font-weight: 800; color: var(--orange-800);">${r.col1 || r.doseFormatted}</td>
+                <td style="font-weight: 800; color: var(--orange-600); font-size: 0.95rem;">${r.col2 || (r.rateFormatted + (r.rateFormatted.includes(' ') ? '' : ' cc/hr'))}</td>
+                <td>${r.col3 || (r.macroGttsFormatted + (r.macroGttsFormatted.includes(' ') || r.macroGttsFormatted === 'N/A' ? '' : ' gtts/min'))}</td>
+                <td>${r.col4 || (r.microGttsFormatted + (r.microGttsFormatted.includes(' ') || r.microGttsFormatted === 'N/A' ? '' : ' gtts/min'))}</td>
+                <td>${r.col5 || r.hourlyDrugFormatted}</td>
+                <td class="dosing-table-math">${r.col6 || r.formulaProof}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -2196,6 +3228,216 @@ function generateDosingTableData(drug) {
   if (!drug) return null;
 
   const weight = parseFloat(state.weight) || (drug.weightBased ? 70 : 70);
+
+  if (drug.formulaType === 'tabletCalc') {
+    const avail = parseFloat(document.getElementById('basicAvailableDose')?.value) || drug.example?.available || 250;
+    const doses = [62.5, 125, 250, 375, 500, 625, 750, 875, 1000, 1250, 1500, 2000];
+    const customHeaders = [
+      'Column 1: Prescribed Dose (mg)',
+      'Column 2: Required Tablets',
+      'Column 3: Half-Tab Units',
+      'Column 4: Tablet Strength',
+      'Column 5: Order Note',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = doses.map(d => {
+      const tabs = d / avail;
+      const whole = Math.floor(tabs);
+      const frac = tabs % 1;
+      const fracText = frac === 0 ? `${whole} tab(s)` : `${whole > 0 ? whole + ' tab + ' : ''}${formatNumber(frac, 2)} tab`;
+      return {
+        dose: d,
+        doseFormatted: `${d} mg`,
+        rate: tabs,
+        rateFormatted: `${formatNumber(tabs, 2)} Tabs`,
+        macroGttsFormatted: `${formatNumber(tabs * 2, 0)} half-tabs`,
+        microGttsFormatted: `${avail} mg/tab`,
+        hourlyDrugFormatted: fracText,
+        formulaProof: `${d} mg ÷ ${avail} mg/tab = ${formatNumber(tabs, 2)} Tabs`,
+        col1: `${d} mg`,
+        col2: `${formatNumber(tabs, 2)} Tabs`,
+        col3: `${formatNumber(tabs * 2, 0)} half-tabs`,
+        col4: `${avail} mg/tab`,
+        col5: fracText,
+        col6: `${d} mg ÷ ${avail} mg/tab = ${formatNumber(tabs, 2)} Tabs`
+      };
+    });
+    return { drug, concLabel: `Tablet Strength: ${avail} mg/tab`, weight: null, customHeaders, rows };
+  }
+
+  if (drug.formulaType === 'liquidCalc') {
+    const avail = parseFloat(document.getElementById('basicAvailableDose')?.value) || drug.example?.available || 125;
+    const availVol = parseFloat(document.getElementById('basicAvailVol')?.value) || drug.example?.availVol || 5;
+    const conc = avail / availVol;
+    const doses = [50, 100, 125, 150, 200, 250, 300, 375, 500, 750, 1000];
+    const customHeaders = [
+      'Column 1: Prescribed Dose (mg)',
+      'Column 2: Required Volume (mL)',
+      'Column 3: Teaspoons (5 mL)',
+      'Column 4: Tablespoons (15 mL)',
+      'Column 5: Stock Concentration',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = doses.map(d => {
+      const volReq = (d / avail) * availVol;
+      return {
+        dose: d,
+        doseFormatted: `${d} mg`,
+        rate: volReq,
+        rateFormatted: `${formatNumber(volReq, 2)} mL`,
+        macroGttsFormatted: `${formatNumber(volReq / 5, 1)} tsp`,
+        microGttsFormatted: `${formatNumber(volReq / 15, 1)} tbsp`,
+        hourlyDrugFormatted: `${formatNumber(conc, 2)} mg/mL`,
+        formulaProof: `(${d} mg ÷ ${avail} mg) × ${availVol} mL = ${formatNumber(volReq, 2)} mL`,
+        col1: `${d} mg`,
+        col2: `${formatNumber(volReq, 2)} mL`,
+        col3: `${formatNumber(volReq / 5, 1)} tsp`,
+        col4: `${formatNumber(volReq / 15, 1)} tbsp`,
+        col5: `${formatNumber(conc, 2)} mg/mL`,
+        col6: `(${d} mg ÷ ${avail} mg) × ${availVol} mL = ${formatNumber(volReq, 2)} mL`
+      };
+    });
+    return { drug, concLabel: `Stock: ${avail} mg / ${availVol} mL (${formatNumber(conc, 2)} mg/mL)`, weight: null, customHeaders, rows };
+  }
+
+  if (drug.formulaType === 'injectionCalc') {
+    const avail = parseFloat(document.getElementById('basicAvailableDose')?.value) || drug.example?.available || 1000;
+    const availVol = parseFloat(document.getElementById('basicAvailVol')?.value) || drug.example?.availVol || 10;
+    const conc = avail / availVol;
+    const doses = [100, 200, 250, 400, 500, 750, 1000, 1250, 1500, 2000];
+    const customHeaders = [
+      'Column 1: Prescribed Dose (mg)',
+      'Column 2: Injectable Volume (mL)',
+      'Column 3: Solution Conc (mg/mL)',
+      'Column 4: Reconstituted Vial',
+      'Column 5: Target Dose',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = doses.map(d => {
+      const volReq = (d / avail) * availVol;
+      return {
+        dose: d,
+        doseFormatted: `${d} mg`,
+        rate: volReq,
+        rateFormatted: `${formatNumber(volReq, 2)} mL`,
+        macroGttsFormatted: `${formatNumber(conc, 2)} mg/mL`,
+        microGttsFormatted: `Vial ${avail}mg/${availVol}mL`,
+        hourlyDrugFormatted: `${d} mg Dose`,
+        formulaProof: `(${d} mg ÷ ${avail} mg) × ${availVol} mL = ${formatNumber(volReq, 2)} mL`,
+        col1: `${d} mg`,
+        col2: `${formatNumber(volReq, 2)} mL`,
+        col3: `${formatNumber(conc, 2)} mg/mL`,
+        col4: `Vial ${avail}mg/${availVol}mL`,
+        col5: `${d} mg Dose`,
+        col6: `(${d} mg ÷ ${avail} mg) × ${availVol} mL = ${formatNumber(volReq, 2)} mL`
+      };
+    });
+    return { drug, concLabel: `Vial: ${avail} mg in ${availVol} mL (${formatNumber(conc, 2)} mg/mL)`, weight: null, customHeaders, rows };
+  }
+
+  if (drug.formulaType === 'ivFlowRateCalc') {
+    const vol = parseFloat(document.getElementById('basicTotalVol')?.value) || drug.example?.volume || 1000;
+    const hoursList = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24];
+    const customHeaders = [
+      'Column 1: Infusion Duration',
+      'Column 2: Pump Flow Rate (cc/hr)',
+      'Column 3: Macro Drip (15 gtt/min)',
+      'Column 4: Micro Drip (60 gtt/min)',
+      'Column 5: Total Infusion Volume',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = hoursList.map(h => {
+      const rate = vol / h;
+      const macro15 = (rate * 15) / 60;
+      const micro60 = rate;
+      return {
+        dose: h,
+        doseFormatted: `${h} ${h === 1 ? 'hour' : 'hours'}`,
+        rate: rate,
+        rateFormatted: `${formatNumber(rate, 2)} cc/hr`,
+        macroGttsFormatted: `${formatNumber(macro15, 1)} gtts/min`,
+        microGttsFormatted: `${formatNumber(micro60, 1)} gtts/min`,
+        hourlyDrugFormatted: `${vol} mL Total`,
+        formulaProof: `${vol} mL ÷ ${h} hrs = ${formatNumber(rate, 2)} mL/hr`,
+        col1: `${h} ${h === 1 ? 'hour' : 'hours'}`,
+        col2: `${formatNumber(rate, 2)} cc/hr`,
+        col3: `${formatNumber(macro15, 1)} gtts/min`,
+        col4: `${formatNumber(micro60, 1)} gtts/min`,
+        col5: `${vol} mL Total`,
+        col6: `${vol} mL ÷ ${h} hrs = ${formatNumber(rate, 2)} mL/hr`
+      };
+    });
+    return { drug, concLabel: `Total Infusion: ${vol} mL`, weight: null, customHeaders, rows };
+  }
+
+  if (drug.formulaType === 'dropRateCalc') {
+    const vol = parseFloat(document.getElementById('basicTotalVol')?.value) || drug.example?.volume || 500;
+    const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value) || drug.example?.dropFactor || 20;
+    const hoursList = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24];
+    const customHeaders = [
+      'Column 1: Infusion Duration',
+      'Column 2: Pump Rate (cc/hr)',
+      'Column 3: Drop Rate (gtt/min)',
+      'Column 4: Tubing Drop Factor',
+      'Column 5: Total Infusion Volume',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = hoursList.map(h => {
+      const mins = h * 60;
+      const gttMin = (vol * dropFactor) / mins;
+      const rate = vol / h;
+      return {
+        dose: h,
+        doseFormatted: `${h} hrs (${mins} min)`,
+        rate: rate,
+        rateFormatted: `${formatNumber(rate, 2)} cc/hr`,
+        macroGttsFormatted: `${formatNumber(gttMin, 1)} gtts/min`,
+        microGttsFormatted: `${dropFactor} gtt/mL`,
+        hourlyDrugFormatted: `${vol} mL Total`,
+        formulaProof: `(${vol} mL × ${dropFactor}) ÷ ${mins} min = ${formatNumber(gttMin, 1)} gtt/min`,
+        col1: `${h} hrs (${mins} min)`,
+        col2: `${formatNumber(rate, 2)} cc/hr`,
+        col3: `${formatNumber(gttMin, 1)} gtts/min`,
+        col4: `${dropFactor} gtt/mL`,
+        col5: `${vol} mL Total`,
+        col6: `(${vol} mL × ${dropFactor}) ÷ ${mins} min = ${formatNumber(gttMin, 1)} gtt/min`
+      };
+    });
+    return { drug, concLabel: `Volume: ${vol} mL | Drop Factor: ${dropFactor} gtt/mL`, weight: null, customHeaders, rows };
+  }
+
+  if (drug.formulaType === 'weightDoseCalc') {
+    const dosePerKg = parseFloat(document.getElementById('basicDosePerKg')?.value) || drug.example?.dosePerKg || 15;
+    const weights = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
+    const customHeaders = [
+      'Column 1: Patient Weight (kg)',
+      'Column 2: Total Required Dose (mg)',
+      'Column 3: Gram Equivalent (g)',
+      'Column 4: Dose/kg Specification',
+      'Column 5: Regimen Note',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = weights.map(w => {
+      const tot = dosePerKg * w;
+      return {
+        dose: w,
+        doseFormatted: `${w} kg`,
+        rate: tot,
+        rateFormatted: `${formatNumber(tot, 2)} mg`,
+        macroGttsFormatted: `${formatNumber(tot / 1000, 3)} g`,
+        microGttsFormatted: `${dosePerKg} mg/kg`,
+        hourlyDrugFormatted: `Single: ${formatNumber(tot, 2)} mg`,
+        formulaProof: `${dosePerKg} mg/kg × ${w} kg = ${formatNumber(tot, 2)} mg`,
+        col1: `${w} kg`,
+        col2: `${formatNumber(tot, 2)} mg`,
+        col3: `${formatNumber(tot / 1000, 3)} g`,
+        col4: `${dosePerKg} mg/kg`,
+        col5: `Single: ${formatNumber(tot, 2)} mg`,
+        col6: `${dosePerKg} mg/kg × ${w} kg = ${formatNumber(tot, 2)} mg`
+      };
+    });
+    return { drug, concLabel: `Prescribed: ${dosePerKg} mg/kg`, weight: null, customHeaders, rows };
+  }
 
   if (drug.formulaType === 'protocol') {
     const rows = (drug.protocols || []).map((p, idx) => ({
@@ -2389,11 +3631,25 @@ function exportDosingTableCSV() {
   csv += `Concentration: ${data.concLabel}\n`;
   csv += `Patient Weight: ${data.weight ? data.weight + ' kg' : 'Standard'}\n\n`;
 
-  csv += `"Dose (${drug.doseUnit})","Flow Rate (cc/hr)","Macro Drip (15 gtts/min)","Micro Drip (60 gtts/min)","Hourly Infused Drug","Computation Formula Proof"\n`;
+  const headers = data.customHeaders || [
+    `Dose (${drug.doseUnit})`,
+    `Flow Rate (cc/hr)`,
+    `Macro Drip (15 gtts/min)`,
+    `Micro Drip (60 gtts/min)`,
+    `Hourly Infused Drug`,
+    `Computation Formula Proof`
+  ];
+
+  csv += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + '\n';
 
   data.rows.forEach(r => {
-    const proofClean = r.formulaProof.replace(/×/g, '*').replace(/÷/g, '/');
-    csv += `"${r.doseFormatted}","${r.rateFormatted}","${r.macroGttsFormatted}","${r.microGttsFormatted}","${r.hourlyDrugFormatted}","${proofClean}"\n`;
+    const col1 = r.col1 || r.doseFormatted;
+    const col2 = r.col2 || r.rateFormatted;
+    const col3 = r.col3 || r.macroGttsFormatted;
+    const col4 = r.col4 || r.microGttsFormatted;
+    const col5 = r.col5 || r.hourlyDrugFormatted;
+    const col6 = (r.col6 || r.formulaProof || '').replace(/×/g, '*').replace(/÷/g, '/');
+    csv += `"${col1}","${col2}","${col3}","${col4}","${col5}","${col6}"\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2413,10 +3669,25 @@ function copyDosingTableTSV() {
   const data = generateDosingTableData(drug);
   if (!data || !data.rows) return;
 
-  let tsv = `Dose (${drug.doseUnit})\tFlow Rate (cc/hr)\tMacro Drip (15 gtts/min)\tMicro Drip (60 gtts/min)\tHourly Infused Drug\tComputation Formula Proof\n`;
+  const headers = data.customHeaders || [
+    `Dose (${drug.doseUnit})`,
+    `Flow Rate (cc/hr)`,
+    `Macro Drip (15 gtts/min)`,
+    `Micro Drip (60 gtts/min)`,
+    `Hourly Infused Drug`,
+    `Computation Formula Proof`
+  ];
+
+  let tsv = headers.join('\t') + '\n';
 
   data.rows.forEach(r => {
-    tsv += `${r.doseFormatted}\t${r.rateFormatted}\t${r.macroGttsFormatted}\t${r.microGttsFormatted}\t${r.hourlyDrugFormatted}\t${r.formulaProof}\n`;
+    const col1 = r.col1 || r.doseFormatted;
+    const col2 = r.col2 || r.rateFormatted;
+    const col3 = r.col3 || r.macroGttsFormatted;
+    const col4 = r.col4 || r.microGttsFormatted;
+    const col5 = r.col5 || r.hourlyDrugFormatted;
+    const col6 = r.col6 || r.formulaProof;
+    tsv += `${col1}\t${col2}\t${col3}\t${col4}\t${col5}\t${col6}\n`;
   });
 
   if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -2437,14 +3708,23 @@ function printDosingTable() {
   const data = generateDosingTableData(drug);
   if (!data || !data.rows) return;
 
+  const headers = data.customHeaders || [
+    `Dose (${drug.doseUnit})`,
+    `Flow Rate (cc/hr)`,
+    `Macro Drip (15 gtts/min)`,
+    `Micro Drip (60 gtts/min)`,
+    `Hourly Infused Drug`,
+    `Computation Formula Proof`
+  ];
+
   const rowsHtml = data.rows.map(r => `
     <tr>
-      <td>${r.doseFormatted}</td>
-      <td>${r.rateFormatted} cc/hr</td>
-      <td>${r.macroGttsFormatted} gtts/min</td>
-      <td>${r.microGttsFormatted} gtts/min</td>
-      <td>${r.hourlyDrugFormatted}</td>
-      <td>${r.formulaProof}</td>
+      <td>${r.col1 || r.doseFormatted}</td>
+      <td>${r.col2 || (r.rateFormatted + (r.rateFormatted.includes(' ') ? '' : ' cc/hr'))}</td>
+      <td>${r.col3 || (r.macroGttsFormatted + (r.macroGttsFormatted.includes(' ') || r.macroGttsFormatted === 'N/A' ? '' : ' gtts/min'))}</td>
+      <td>${r.col4 || (r.microGttsFormatted + (r.microGttsFormatted.includes(' ') || r.microGttsFormatted === 'N/A' ? '' : ' gtts/min'))}</td>
+      <td>${r.col5 || r.hourlyDrugFormatted}</td>
+      <td>${r.col6 || r.formulaProof}</td>
     </tr>
   `).join('');
 
@@ -2475,12 +3755,7 @@ function printDosingTable() {
       <table>
         <thead>
           <tr>
-            <th>Dose (${drug.doseUnit})</th>
-            <th>Flow Rate (cc/hr)</th>
-            <th>Macro Drip (15 gtts/min)</th>
-            <th>Micro Drip (60 gtts/min)</th>
-            <th>Hourly Infused Drug</th>
-            <th>Computation Formula Proof</th>
+            ${headers.map(h => `<th>${h}</th>`).join('')}
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
@@ -2808,6 +4083,47 @@ function closeQuickRef() {
 function renderQuickRef() {
   const body = document.getElementById('quickRefBody');
   body.innerHTML = `
+    <!-- Drug Calculations Made Easy Reference Section -->
+    <div class="ref-section">
+      <div class="ref-section-title">Drug Calculations Made Easy</div>
+      <div style="font-size: 0.78rem; color: var(--gray-600); margin-bottom: 8px;">
+        Core clinical bedside formulas with instant interactive calculators:
+      </div>
+      <table class="ref-table">
+        <tr><th>Formula</th><th>Core Equation</th><th>Launch</th></tr>
+        <tr>
+          <td><strong>1. Tablet Calculation</strong></td>
+          <td>Prescribed ÷ Available</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('tabletCalc');">Open</button></td>
+        </tr>
+        <tr>
+          <td><strong>2. Liquid Calculation</strong></td>
+          <td>(Prescribed ÷ Available) × Vol</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('liquidCalc');">Open</button></td>
+        </tr>
+        <tr>
+          <td><strong>3. Injection Calculation</strong></td>
+          <td>(Prescribed ÷ Available) × Diluent Vol</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('injectionCalc');">Open</button></td>
+        </tr>
+        <tr>
+          <td><strong>4. IV Flow Rate</strong></td>
+          <td>Total Volume (mL) ÷ Time (hours)</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('ivFlowRate');">Open</button></td>
+        </tr>
+        <tr>
+          <td><strong>5. Drops Per Minute</strong></td>
+          <td>(Volume × Drop Factor) ÷ Time (min)</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('dropRate');">Open</button></td>
+        </tr>
+        <tr>
+          <td><strong>6. Weight-Based Dosing</strong></td>
+          <td>Dose/kg × Patient Weight (kg)</td>
+          <td><button type="button" class="preset-chip-btn" onclick="closeQuickRef(); openCalculator('weightDoseBasic');">Open</button></td>
+        </tr>
+      </table>
+    </div>
+
     <!-- Volume Conversions -->
     <div class="ref-section">
       <div class="ref-section-title">Volume Conversions</div>
