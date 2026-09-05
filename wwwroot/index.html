@@ -3,37 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="description" content="ICU Drip Rate Calculator — Compute IV drip rates for vasopressors, antiarrhythmics, vasodilators, sedatives, anticoagulants, and electrolytes. Based on clinical drip computation references.">
+
+  <!-- ════════ Primary SEO Meta Tags ════════ -->
+  <title>ICU Drip – Fast Infusion & Vasopressor Calculator for Nurses</title>
+  <meta name="description" content="ICU Drip helps nurses and clinicians quickly calculate infusion rates for vasopressors, sedatives, and critical care drips. Built for speed, safety, and shift work.">
+  <meta name="keywords" content="ICU calculator, drip rate calculator, vasopressor calculator, infusion rate, nursing calculator, critical care, dopamine drip, norepinephrine, IV drip rate, drug dosage calculator, fentanyl dose calculator, heparin drip, electrolyte deficit">
+  <meta name="author" content="Al Manalaysay">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://icudrip.com/">
+
+  <!-- ════════ Theme & PWA ════════ -->
   <meta name="theme-color" content="#F97316">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Al ICU Calculator</title>
+
+  <!-- ════════ Open Graph (Facebook, LinkedIn, etc.) ════════ -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://icudrip.com/">
+  <meta property="og:title" content="ICU Drip – Fast Infusion & Vasopressor Calculator for Nurses">
+  <meta property="og:description" content="ICU Drip helps nurses and clinicians quickly calculate infusion rates for vasopressors, sedatives, and critical care drips. Built for speed, safety, and shift work.">
+  <meta property="og:image" content="https://icudrip.com/app_icon.png">
+  <meta property="og:site_name" content="ICU Drip">
+  <meta property="og:locale" content="en_US">
+
+  <!-- ════════ Twitter Card ════════ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ICU Drip – Fast Infusion & Vasopressor Calculator for Nurses">
+  <meta name="twitter:description" content="Calculate ICU infusion rates and doses in seconds. Supports vasopressors, sedatives, anticoagulants, and 20+ critical care drugs. Designed for bedside use by nurses.">
+  <meta name="twitter:image" content="https://icudrip.com/app_icon.png">
+
+  <!-- ════════ Assets ════════ -->
   <link rel="stylesheet" href="style.css?v=4">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>💧</text></svg>">
 
-  <!-- ════════ Google Rich Snippets & Schema.org Rating Metadata ════════ -->
+  <!-- ════════ Comprehensive Schema.org JSON-LD (AI & Search Engine Friendly) ════════ -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Al ICU Calculator",
-    "url": "https://icudrip.com",
-    "operatingSystem": "Web, iOS, Android, Windows",
-    "applicationCategory": "MedicalApplication",
-    "description": "ICU Drip Rate Calculator — Compute IV drip rates for vasopressors, antiarrhythmics, vasodilators, sedatives, anticoagulants, and electrolytes.",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "ratingCount": "148",
-      "reviewCount": "148",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://icudrip.com/#website",
+        "url": "https://icudrip.com",
+        "name": "ICU Drip",
+        "description": "Fast infusion and vasopressor calculator for nurses and clinicians in critical care.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://icudrip.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        },
+        "publisher": { "@id": "https://icudrip.com/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://icudrip.com/#organization",
+        "name": "ICU Drip",
+        "url": "https://icudrip.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://icudrip.com/app_icon.png",
+          "width": 512,
+          "height": 512
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "almanalaysay93@gmail.com",
+          "contactType": "customer support"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://icudrip.com/#calculator",
+        "name": "ICU Drip Calculator",
+        "url": "https://icudrip.com",
+        "description": "Web-based ICU infusion and vasopressor drip calculator for nurses and clinicians. Supports 20+ drugs including Dopamine, Norepinephrine, Epinephrine, Amiodarone, Heparin, Fentanyl, and electrolyte deficit calculators.",
+        "applicationCategory": "MedicalApplication",
+        "operatingSystem": "Web, iOS, Android, Windows",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "Nurses, Critical Care Clinicians, ICU Staff, Pharmacists"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.9",
+          "ratingCount": "148",
+          "reviewCount": "148",
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "publisher": { "@id": "https://icudrip.com/#organization" }
+      },
+      {
+        "@type": "MedicalWebPage",
+        "@id": "https://icudrip.com/#medicalpage",
+        "url": "https://icudrip.com",
+        "name": "ICU Drip Rate Calculator",
+        "about": {
+          "@type": "MedicalCondition",
+          "name": "Critical Care Pharmacotherapy"
+        },
+        "audience": {
+          "@type": "MedicalAudience",
+          "audienceType": "Clinician"
+        },
+        "lastReviewed": "2026-09-05",
+        "isPartOf": { "@id": "https://icudrip.com/#website" }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://icudrip.com/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What drugs does ICU Drip support?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "ICU Drip supports 20+ critical care drugs including Dopamine, Dobutamine, Norepinephrine (Levophed), Epinephrine, Vasopressin, Nitroglycerin, Nicardipine, Amiodarone (Cordarone), Esmolol, Dexmedetomidine (Precedex), Fentanyl, Heparin, Streptokinase, Lidocaine, and electrolyte calculators for Potassium, Magnesium, Sodium, and Sodium Bicarbonate. It also includes 6 basic drug calculation formulas for tablets, liquids, injections, IV flow rates, drop rates, and weight-based dosing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I calculate an IV drip rate?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Select your drug, enter the patient weight (if weight-based), choose your IV container volume (50cc syringe pump, 100cc soluset, or 250cc IVF bag), enter the desired dose, and the calculator instantly shows the flow rate in cc/hr, macro drip (15 gtts/min), and micro drip (60 gtts/min) with step-by-step computation proof."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is ICU Drip free to use?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, ICU Drip is completely free. It works offline as a web app, and is also available as an Android APK and Windows Desktop application. No registration or internet connection is required for calculations."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can ICU Drip calculate drug dosages for basic nursing formulas?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, ICU Drip includes 6 fundamental drug calculation formulas: Tablet Calculation (Prescribed ÷ Available), Liquid Calculation ((Prescribed ÷ Available) × Volume), Injection Calculation, IV Flow Rate (mL/hr), Drops Per Minute (gtt/min), and Weight-Based Dosing (mg/kg × weight). Each formula supports bidirectional calculation with instant step-by-step mathematical proof."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
@@ -86,6 +205,7 @@
     </div>
 
     <!-- Category Pills Bar -->
+    <nav aria-label="Drug categories">
     <div class="category-bar">
       <!-- Clinical Math Calculator Button -->
       <button class="header-btn icu-action-btn category-bar-btn" onclick="openMathCalc()" title="Clinical Math Calculator" aria-label="Open clinical math calculator">
@@ -125,6 +245,7 @@
       </button>
       <div class="category-pills" id="categoryPills"></div>
     </div>
+    </nav>
   </header>
 
   <!-- ════════ Main Content ════════ -->

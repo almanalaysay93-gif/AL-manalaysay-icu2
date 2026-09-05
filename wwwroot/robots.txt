@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /desktop-app/
+Disallow: /android-apk/
+Disallow: /.claude/
+Disallow: /.impeccable/
+Disallow: /.git/
+
+Sitemap: https://icudrip.com/sitemap.xml
