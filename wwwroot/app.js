@@ -1631,6 +1631,21 @@ function renderBasicFormulaPanel(drug) {
     }
   }
 
+  // Result area
+  html += '<div id="calcResult"></div>';
+
+  // Clinical Notes Reference
+  if (drug.notes) {
+    html += `
+      <div class="calc-section" style="margin-top: 16px;">
+        <div class="dose-warning info">
+          <span class="dose-warning-icon">ℹ️</span>
+          <span>${drug.notes}</span>
+        </div>
+      </div>
+    `;
+  }
+
   return html;
 }
 
