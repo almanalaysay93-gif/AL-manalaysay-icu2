@@ -349,6 +349,22 @@ const DRUGS = {
     notes: 'α2-agonist sedative. Dose: 0.1–0.8 mcg/kg/hr. No respiratory depression at standard doses.',
   },
 
+  fentanyl: {
+    name: 'Fentanyl',
+    generic: 'Fentanyl Citrate (mL ↔ mcg)',
+    category: 'sedative',
+    categoryLabel: 'Sedative / Analgesic',
+    icon: '💉',
+    formulation: '50 mcg/mL (100 mcg/2mL, 250 mcg/5mL, 500 mcg/10mL)',
+    doseUnit: 'mcg or mL',
+    weightBased: false,
+    formulaType: 'fentanylCalc',
+    doseRange: { min: 25, max: 100 },
+    doseRangeLabels: { low: 'Minor (25–50 mcg)', mid: 'Moderate (50–100 mcg)', high: 'Major (100–200 mcg)' },
+    notes: 'Potent synthetic μ-opioid receptor agonist (50–100x morphine potency). Standard stock: 50 mcg/mL. Dilutions: 20, 10, 4 mcg/mL. Fast onset (1–2 min). High alert: monitor respiratory status continuously. Have Naloxone (Narcan) immediately available.',
+    example: { conc: 50, vol: 1, dose: 50 }
+  },
+
   heparin: {
     name: 'Heparin',
     generic: 'Unfractionated Heparin',
@@ -610,7 +626,7 @@ const CATEGORIES = [
   { key: 'vasopressor', label: 'Vasopressors', icon: '💉' },
   { key: 'vasodilator', label: 'Vasodilators', icon: '🫀' },
   { key: 'antiarrhythmic', label: 'Antiarrhythmics', icon: '⚡' },
-  { key: 'sedative', label: 'Sedatives', icon: '😴' },
+  { key: 'sedative', label: 'Sedatives & Analgesics', icon: '😴' },
   { key: 'anticoagulant', label: 'Anticoagulants', icon: '🩸' },
   { key: 'thrombolytic', label: 'Thrombolytics', icon: '🫁' },
   { key: 'electrolyte', label: 'Electrolytes', icon: '⚗️' },
@@ -631,6 +647,7 @@ const state = {
   patientType: 'adult',      // or 'pedia'
   labValue: '',
   baseDeficit: '',
+  fentanylConc: 50,
   basicUnits: {
     prescribed: 'mg',
     available: 'mg',
@@ -987,6 +1004,9 @@ function renderCalculatorPanel(drug) {
   else if (drug.formulaType === 'bicarbDeficit') {
     html = renderBicarbPanel(drug);
   }
+  else if (drug.formulaType === 'fentanylCalc') {
+    html = renderFentanylPanel(drug);
+  }
   // Special: basic formulas (Drug Calculations Made Easy)
   else if (['tabletCalc', 'liquidCalc', 'injectionCalc', 'ivFlowRateCalc', 'dropRateCalc', 'weightDoseCalc'].includes(drug.formulaType)) {
     html = renderBasicFormulaPanel(drug);
@@ -1036,6 +1056,107 @@ function normalizeToBaseMg(val, unit) {
   if (u === 'mcg') return num / 1000;
   if (u === 'g') return num * 1000;
   return num;
+}
+
+function renderFentanylPanel(drug) {
+  let html = '';
+  const isForward = state.calcMode !== 'rateToDose';
+  const currentConc = state.fentanylConc || 50;
+
+  html += `
+    <div class="mode-switcher">
+      <button class="mode-btn ${isForward ? 'active' : ''}" onclick="setCalcMode('doseToRate')">
+        Volume (mL) → Dose (mcg)
+      </button>
+      <button class="mode-btn ${!isForward ? 'active' : ''}" onclick="setCalcMode('rateToDose')">
+        Dose (mcg) → Volume (mL)
+      </button>
+    </div>
+
+    <div class="calc-section">
+      <div class="calc-section-title">1. Fentanyl Solution Concentration</div>
+      <div class="input-group">
+        <div class="input-wrapper">
+          <input type="number" class="input-field" id="fentanylConc" placeholder="e.g. 50" value="${currentConc}" step="any" min="0" inputmode="decimal">
+          <span class="input-suffix">mcg/mL</span>
+        </div>
+        <div class="quick-presets-row">
+          <span class="preset-label">Standard Stocks:</span>
+          <button type="button" class="preset-chip-btn ${currentConc == 50 ? 'active' : ''}" onclick="setBasicInput('fentanylConc', 50)">50 mcg/mL (Standard)</button>
+          <button type="button" class="preset-chip-btn ${currentConc == 20 ? 'active' : ''}" onclick="setBasicInput('fentanylConc', 20)">20 mcg/mL</button>
+          <button type="button" class="preset-chip-btn ${currentConc == 10 ? 'active' : ''}" onclick="setBasicInput('fentanylConc', 10)">10 mcg/mL (Infusion)</button>
+          <button type="button" class="preset-chip-btn ${currentConc == 4 ? 'active' : ''}" onclick="setBasicInput('fentanylConc', 4)">4 mcg/mL (Pedia/Neo)</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (isForward) {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">2. Administered / Measured Volume</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="fentanylVol" placeholder="e.g. 1.0" value="" step="any" min="0" inputmode="decimal">
+            <span class="input-suffix">mL</span>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Presets:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 0.1)">0.1 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 0.2)">0.2 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 0.3)">0.3 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 0.5)">0.5 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 0.75)">0.75 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 1.0)">1.0 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 2.0)">2.0 mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylVol', 5.0)">5.0 mL</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">2. Desired / Ordered Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="fentanylDose" placeholder="e.g. 50" value="" step="any" min="0" inputmode="decimal">
+            <span class="input-suffix">mcg</span>
+          </div>
+          <div class="quick-presets-row">
+            <span class="preset-label">Presets:</span>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 5)">5 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 10)">10 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 15)">15 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 25)">25 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 37.5)">37.5 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 50)">50 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 100)">100 mcg</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicInput('fentanylDose', 250)">250 mcg</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Result area
+  html += '<div id="calcResult"></div>';
+
+  // Clinical Guidance Callouts
+  html += `
+    <div class="calc-section" style="margin-top: 16px;">
+      <div class="dose-warning warning" style="margin-bottom: 10px;">
+        <span class="dose-warning-icon">⚠️</span>
+        <span><strong>HIGH ALERT MEDICATION:</strong> Fentanyl is ~50–100× more potent than Morphine. Verify vial concentration before administration. Continuous SpO2, ECG, and respiratory monitoring required. Have <strong>Naloxone (Narcan) 0.4 mg</strong> immediately available.</span>
+      </div>
+      <div class="dose-warning info">
+        <span class="dose-warning-icon">ℹ️</span>
+        <span><strong>Formulations:</strong> Standard ampoules/vials: 100 mcg / 2 mL, 250 mcg / 5 mL, 500 mcg / 10 mL (all 50 mcg/mL). Diluted solutions: 4 mcg/mL, 10 mcg/mL, 20 mcg/mL.</span>
+      </div>
+    </div>
+  `;
+
+  return html;
 }
 
 function renderBasicFormulaPanel(drug) {
@@ -2275,12 +2396,18 @@ function attachCalcListeners(drug) {
     presetCustomAmtEl.addEventListener('input', (e) => { state.presetCustomAmt = e.target.value; recalc(); });
   }
 
+  const fentConcEl = document.getElementById('fentanylConc');
+  if (fentConcEl) {
+    fentConcEl.addEventListener('input', (e) => { state.fentanylConc = parseFloat(e.target.value) || 50; recalc(); });
+  }
   // Basic Formulas Listeners
   const basicInputs = [
     'basicPrescribedDose', 'basicAvailableDose', 'basicAvailVol', 'basicTotalVol',
     'basicTimeHours', 'basicDropFactor', 'basicTimeVal', 'basicTimeUnit',
     'basicDosePerKg', 'basicWeight', 'basicGivenTabs', 'basicAdminVol',
-    'basicPumpRate', 'basicTargetGtt', 'basicTotalGivenDose'
+    'basicPumpRate', 'basicTargetGtt', 'basicTotalGivenDose',
+    'basicPrescribedUnit', 'basicAvailableUnit', 'basicDosePerKgUnit', 'basicTotalGivenUnit',
+    'fentanylConc', 'fentanylVol', 'fentanylDose'
   ];
   basicInputs.forEach(id => {
     const el = document.getElementById(id);
@@ -2292,6 +2419,183 @@ function attachCalcListeners(drug) {
 
   // Trigger initial calculation when panel loads
   recalc();
+}
+
+function recalculateFentanyl(drug, resultEl) {
+  const isForward = state.calcMode !== 'rateToDose';
+  const conc = parseFloat(document.getElementById('fentanylConc')?.value) || state.fentanylConc || 50;
+  state.fentanylConc = conc;
+
+  const renderEmptyCard = (msg) => {
+    resultEl.innerHTML = `
+      <div class="result-card" style="text-align: center; padding: 26px 16px; border: 1px dashed var(--gray-300); background: var(--gray-50); box-shadow: none;">
+        <div style="font-size: 1.8rem; margin-bottom: 6px;">⌨️</div>
+        <div class="result-label" style="font-size: 0.95rem; font-weight: 600; color: var(--gray-700);">Enter ${isForward ? 'Volume' : 'Dose'} or Tap a Preset</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">${msg || 'The calculated dosage and complete step-by-step conversion will generate automatically as you type.'}</div>
+      </div>
+    `;
+  };
+
+  let resultCardHTML = '';
+  let equationText = '';
+  let steps = [];
+  let finalValText = '';
+
+  if (isForward) {
+    const vol = parseFloat(document.getElementById('fentanylVol')?.value);
+    if (isNaN(vol) || vol <= 0) {
+      renderEmptyCard('Enter administered volume in mL to calculate the fentanyl microgram dose.');
+      return;
+    }
+
+    const doseMcg = vol * conc;
+    const doseMg = doseMcg / 1000;
+
+    resultCardHTML = `
+      <div class="result-card">
+        <div class="result-label">Delivered Fentanyl Dose</div>
+        <div class="result-value">${formatNumber(doseMcg, 2)}</div>
+        <div class="result-unit">mcg (micrograms)</div>
+        <div class="result-details">
+          <div class="result-detail">
+            <div class="result-detail-label">Administered Volume</div>
+            <div class="result-detail-value">${vol} mL</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Solution Concentration</div>
+            <div class="result-detail-value">${conc} mcg/mL</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Milligram Equivalent</div>
+            <div class="result-detail-value">${formatNumber(doseMg, 4)} mg</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Formula Proof</div>
+            <div class="result-detail-value">${vol} mL × ${conc} mcg/mL</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    equationText = `Dose (mcg) = Volume (mL) × Concentration (mcg/mL)`;
+    steps = [
+      {
+        num: 'Step 1: Clinical Values',
+        desc: `Administered Volume = ${vol} mL, Fentanyl Concentration = ${conc} mcg/mL`,
+        math: `Equation: Dose (mcg) = Volume (mL) × Concentration (mcg/mL)`
+      },
+      {
+        num: 'Step 2: Solve Microgram Dose',
+        desc: `Multiply volume by solution concentration`,
+        math: `${vol} mL × ${conc} mcg/mL = ${formatNumber(doseMcg, 2)} mcg`
+      },
+      {
+        num: 'Step 3: Milligram Equivalent & Safety Verification',
+        desc: `Divide micrograms by 1,000 for standard hospital unit verification`,
+        math: `${formatNumber(doseMcg, 2)} mcg ÷ 1,000 = ${formatNumber(doseMg, 4)} mg`
+      }
+    ];
+    finalValText = `${formatNumber(doseMcg, 2)} mcg (${formatNumber(doseMg, 4)} mg)`;
+  } else {
+    const dose = parseFloat(document.getElementById('fentanylDose')?.value);
+    if (isNaN(dose) || dose <= 0) {
+      renderEmptyCard('Enter desired dose in mcg to calculate volume to measure in mL.');
+      return;
+    }
+
+    const vol = dose / conc;
+    const doseMg = dose / 1000;
+    const syringeGuide = vol <= 1 ? '1 mL Tuberculin Syringe' : (vol <= 3 ? '3 mL Syringe' : '5 mL Syringe');
+
+    resultCardHTML = `
+      <div class="result-card">
+        <div class="result-label">Required Volume to Draw</div>
+        <div class="result-value">${formatNumber(vol, 2)}</div>
+        <div class="result-unit">mL (milliliters)</div>
+        <div class="result-details">
+          <div class="result-detail">
+            <div class="result-detail-label">Target Dose</div>
+            <div class="result-detail-value">${dose} mcg (${formatNumber(doseMg, 4)} mg)</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Solution Concentration</div>
+            <div class="result-detail-value">${conc} mcg/mL</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Syringe Recommendation</div>
+            <div class="result-detail-value">${syringeGuide}</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Formula Proof</div>
+            <div class="result-detail-value">${dose} mcg ÷ ${conc} mcg/mL</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    equationText = `Volume (mL) = Desired Dose (mcg) ÷ Concentration (mcg/mL)`;
+    steps = [
+      {
+        num: 'Step 1: Clinical Values',
+        desc: `Target Ordered Dose = ${dose} mcg, Solution Concentration = ${conc} mcg/mL`,
+        math: `Equation: Volume (mL) = Dose (mcg) ÷ Concentration (mcg/mL)`
+      },
+      {
+        num: 'Step 2: Solve Volume to Draw',
+        desc: `Divide desired microgram dose by concentration`,
+        math: `${dose} mcg ÷ ${conc} mcg/mL = ${formatNumber(vol, 2)} mL`
+      },
+      {
+        num: 'Step 3: Administration Equipment',
+        desc: `Select appropriate precision syringe to measure ${formatNumber(vol, 2)} mL accurately`,
+        math: syringeGuide
+      }
+    ];
+    finalValText = `${formatNumber(vol, 2)} mL (${syringeGuide})`;
+  }
+
+  let html = resultCardHTML;
+  html += `
+    <button class="formula-toggle-btn" onclick="toggleFormulaBreakdown()">
+      📐 ${state.showFormulaBreakdown ? 'Hide Computation Formula' : 'Show Computation Formula & Steps'}
+    </button>
+
+    <button class="formula-toggle-btn" style="background: var(--white); border-color: var(--orange-500); color: var(--orange-700);" onclick="openDosingTable()">
+      📊 Generate Dosing Table & Export to Excel / Google Sheets
+    </button>
+  `;
+
+  if (state.showFormulaBreakdown) {
+    html += `
+      <div class="formula-card">
+        <div class="formula-card-header">
+          <div class="formula-card-title">📐 Step-by-Step Computation Formula</div>
+          <button type="button" class="search-clear visible" onclick="toggleFormulaBreakdown()" title="Close breakdown" style="position:static;">✕</button>
+        </div>
+
+        <div class="formula-equation-box">
+          ${equationText}
+        </div>
+
+        <div class="formula-step-list">
+          ${steps.map(s => `
+            <div class="formula-step-item">
+              <div class="formula-step-num">${s.num}</div>
+              <div class="formula-step-desc">${s.desc}</div>
+              <div class="formula-step-math">${s.math}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="formula-final-box">
+          <span>Calculated Result:</span>
+          <span class="formula-final-val">${finalValText}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  resultEl.innerHTML = html;
 }
 
 function recalculateBasicFormula(drug, resultEl) {
@@ -3037,7 +3341,13 @@ function recalculate(drug) {
   const resultEl = document.getElementById('calcResult');
   if (!resultEl) return;
 
-  // Basic Drug Calculations Made Easy
+  // Fentanyl mL to mcg Conversion
+  if (drug.formulaType === 'fentanylCalc') {
+    recalculateFentanyl(drug, resultEl);
+    return;
+  }
+
+// Basic Drug Calculations Made Easy
   if (['tabletCalc', 'liquidCalc', 'injectionCalc', 'ivFlowRateCalc', 'dropRateCalc', 'weightDoseCalc'].includes(drug.formulaType)) {
     recalculateBasicFormula(drug, resultEl);
     return;
@@ -3369,6 +3679,42 @@ function generateDosingTableData(drug) {
   if (!drug) return null;
 
   const weight = parseFloat(state.weight) || (drug.weightBased ? 70 : 70);
+
+  if (drug.formulaType === 'fentanylCalc') {
+    const conc = parseFloat(document.getElementById('fentanylConc')?.value) || state.fentanylConc || 50;
+    const volumes = [0.1, 0.2, 0.25, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 10.0];
+    const customHeaders = [
+      'Column 1: Volume (mL)',
+      `Column 2: Dose @ ${conc} mcg/mL (mcg)`,
+      'Column 3: Milligram Equivalent (mg)',
+      'Column 4: Standard 50 mcg/mL (mcg)',
+      'Column 5: Diluted 4 mcg/mL (mcg)',
+      'Column 6: Computation Formula Proof'
+    ];
+    const rows = volumes.map(v => {
+      const doseSelected = v * conc;
+      const doseMg = doseSelected / 1000;
+      const doseStd50 = v * 50;
+      const dosePedia4 = v * 4;
+      return {
+        dose: v,
+        doseFormatted: `${v} mL`,
+        rate: doseSelected,
+        rateFormatted: `${formatNumber(doseSelected, 2)} mcg`,
+        macroGttsFormatted: `${formatNumber(doseMg, 4)} mg`,
+        microGttsFormatted: `${formatNumber(doseStd50, 2)} mcg (50 mcg/mL)`,
+        hourlyDrugFormatted: `${formatNumber(dosePedia4, 2)} mcg (4 mcg/mL)`,
+        formulaProof: `${v} mL × ${conc} mcg/mL = ${formatNumber(doseSelected, 2)} mcg`,
+        col1: `${v} mL`,
+        col2: `${formatNumber(doseSelected, 2)} mcg`,
+        col3: `${formatNumber(doseMg, 4)} mg`,
+        col4: `${formatNumber(doseStd50, 2)} mcg`,
+        col5: `${formatNumber(dosePedia4, 2)} mcg`,
+        col6: `${v} mL × ${conc} mcg/mL = ${formatNumber(doseSelected, 2)} mcg`
+      };
+    });
+    return { drug, concLabel: `Fentanyl Solution: ${conc} mcg/mL`, weight: null, customHeaders, rows };
+  }
 
   if (drug.formulaType === 'tabletCalc') {
     const avail = parseFloat(document.getElementById('basicAvailableDose')?.value) || drug.example?.available || 250;
