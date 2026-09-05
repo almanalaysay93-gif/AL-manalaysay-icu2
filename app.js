@@ -631,6 +631,12 @@ const state = {
   patientType: 'adult',      // or 'pedia'
   labValue: '',
   baseDeficit: '',
+  basicUnits: {
+    prescribed: 'mg',
+    available: 'mg',
+    dosePerKg: 'mg',
+    totalGiven: 'mg'
+  },
 };
 
 // ── Utility Functions ──
@@ -1012,10 +1018,35 @@ function setBasicMultiInputs(pairs) {
   });
 }
 
+function setBasicUnit(key, val) {
+  if (!state.basicUnits) {
+    state.basicUnits = { prescribed: 'mg', available: 'mg', dosePerKg: 'mg', totalGiven: 'mg' };
+  }
+  state.basicUnits[key] = val;
+  const recalcEl = document.getElementById('calcResult');
+  if (recalcEl && state.currentDrug) {
+    recalculate(state.currentDrug);
+  }
+}
+
+function normalizeToBaseMg(val, unit) {
+  const num = parseFloat(val);
+  if (isNaN(num)) return 0;
+  const u = (unit || 'mg').toLowerCase();
+  if (u === 'mcg') return num / 1000;
+  if (u === 'g') return num * 1000;
+  return num;
+}
+
 function renderBasicFormulaPanel(drug) {
   let html = '';
   const ex = drug.example || {};
   const isForward = state.calcMode !== 'rateToDose';
+
+  const presUnit = (state.basicUnits && state.basicUnits.prescribed) || 'mg';
+  const availUnit = (state.basicUnits && state.basicUnits.available) || 'mg';
+  const dosePerKgUnit = (state.basicUnits && state.basicUnits.dosePerKg) || 'mg';
+  const totalGivenUnit = (state.basicUnits && state.basicUnits.totalGiven) || 'mg';
 
   if (drug.formulaType === 'tabletCalc') {
     html += `
@@ -1035,16 +1066,20 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Prescribed Dose</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || 500}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg</span>
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicPrescribedUnit" class="input-unit-select" onchange="setBasicUnit('prescribed', this.value)">
+                <option value="mg" ${presUnit === 'mg' ? 'selected' : ''}>mg</option>
+                <option value="mcg" ${presUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                <option value="g" ${presUnit === 'g' ? 'selected' : ''}>g</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Presets:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 650)">650 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 650)">650</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000</button>
             </div>
           </div>
         </div>
@@ -1053,15 +1088,19 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Available Dose per Tablet</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || 250}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg/tab</span>
+              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg/tab</option>
+                <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg/tab</option>
+                <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g/tab</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Strength:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000</button>
             </div>
           </div>
         </div>
@@ -1072,7 +1111,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Number of Tablets Administered</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicGivenTabs" placeholder="e.g. 2" value="2" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicGivenTabs" placeholder="e.g. 2" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">tablets</span>
             </div>
             <div class="quick-presets-row">
@@ -1091,15 +1130,19 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Available Dose per Tablet</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || 250}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg/tab</span>
+              <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg/tab</option>
+                <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg/tab</option>
+                <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g/tab</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Strength:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 100)">100</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicAvailableDose', 1000)">1,000</button>
             </div>
           </div>
         </div>
@@ -1123,16 +1166,20 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Prescribed Dose</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 250" value="${ex.prescribed || 250}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg</span>
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 250" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicPrescribedUnit" class="input-unit-select" onchange="setBasicUnit('prescribed', this.value)">
+                <option value="mg" ${presUnit === 'mg' ? 'selected' : ''}>mg</option>
+                <option value="mcg" ${presUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                <option value="g" ${presUnit === 'g' ? 'selected' : ''}>g</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Presets:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 375)">375 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 125)">125</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 375)">375</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750</button>
             </div>
           </div>
         </div>
@@ -1142,24 +1189,28 @@ function renderBasicFormulaPanel(drug) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (mg)" value="${ex.available || 125}" step="any" min="0" inputmode="decimal">
-                <span class="input-suffix">mg</span>
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (e.g. 125)" value="" step="any" min="0" inputmode="decimal">
+                <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                  <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg</option>
+                  <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                  <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g</option>
+                </select>
               </div>
             </div>
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (mL)" value="${ex.availVol || 5}" step="any" min="0" inputmode="decimal">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (e.g. 5)" value="" step="any" min="0" inputmode="decimal">
                 <span class="input-suffix">mL</span>
               </div>
             </div>
           </div>
           <div class="quick-presets-row">
             <span class="preset-label">Standard Stock:</span>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100mg / 1mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100 / 1mL</button>
           </div>
         </div>
       `;
@@ -1169,7 +1220,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Volume Administered</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 10" value="10" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 10" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1189,24 +1240,28 @@ function renderBasicFormulaPanel(drug) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (mg)" value="${ex.available || 125}" step="any" min="0" inputmode="decimal">
-                <span class="input-suffix">mg</span>
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Dose (e.g. 125)" value="" step="any" min="0" inputmode="decimal">
+                <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                  <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg</option>
+                  <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                  <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g</option>
+                </select>
               </div>
             </div>
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (mL)" value="${ex.availVol || 5}" step="any" min="0" inputmode="decimal">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Vol (e.g. 5)" value="" step="any" min="0" inputmode="decimal">
                 <span class="input-suffix">mL</span>
               </div>
             </div>
           </div>
           <div class="quick-presets-row">
             <span class="preset-label">Standard Stock:</span>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100mg / 1mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 125, basicAvailVol: 5})">125 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 250, basicAvailVol: 5})">250 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 200, basicAvailVol: 5})">200 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 400, basicAvailVol: 5})">400 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 100, basicAvailVol: 1})">100 / 1mL</button>
           </div>
         </div>
       `;
@@ -1229,16 +1284,20 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Prescribed Dose</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || 500}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg</span>
+              <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicPrescribedUnit" class="input-unit-select" onchange="setBasicUnit('prescribed', this.value)">
+                <option value="mg" ${presUnit === 'mg' ? 'selected' : ''}>mg</option>
+                <option value="mcg" ${presUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                <option value="g" ${presUnit === 'g' ? 'selected' : ''}>g</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Presets:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000 mg (1g)</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 2000)">2,000 mg (2g)</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 750)">750</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 1000)">1,000</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicPrescribedDose', 2000)">2,000</button>
             </div>
           </div>
         </div>
@@ -1248,24 +1307,28 @@ function renderBasicFormulaPanel(drug) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (mg)" value="${ex.available || 1000}" step="any" min="0" inputmode="decimal">
-                <span class="input-suffix">mg</span>
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (e.g. 1000)" value="" step="any" min="0" inputmode="decimal">
+                <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                  <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg</option>
+                  <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                  <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g</option>
+                </select>
               </div>
             </div>
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (mL)" value="${ex.availVol || 10}" step="any" min="0" inputmode="decimal">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (e.g. 10)" value="" step="any" min="0" inputmode="decimal">
                 <span class="input-suffix">mL</span>
               </div>
             </div>
           </div>
           <div class="quick-presets-row">
             <span class="preset-label">Vial Stock:</span>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500mg / 10mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1g / 10mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1g / 20mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2g / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500 / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1,000 / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1,000 / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2,000 / 20mL</button>
           </div>
         </div>
       `;
@@ -1275,7 +1338,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Volume Injected / Administered</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 5" value="5" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicAdminVol" placeholder="e.g. 5" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1294,24 +1357,28 @@ function renderBasicFormulaPanel(drug) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (mg)" value="${ex.available || 1000}" step="any" min="0" inputmode="decimal">
-                <span class="input-suffix">mg</span>
+                <input type="number" class="input-field" id="basicAvailableDose" placeholder="Vial (e.g. 1000)" value="" step="any" min="0" inputmode="decimal">
+                <select id="basicAvailableUnit" class="input-unit-select" onchange="setBasicUnit('available', this.value)">
+                  <option value="mg" ${availUnit === 'mg' ? 'selected' : ''}>mg</option>
+                  <option value="mcg" ${availUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                  <option value="g" ${availUnit === 'g' ? 'selected' : ''}>g</option>
+                </select>
               </div>
             </div>
             <div class="input-group" style="margin-bottom:0;">
               <div class="input-wrapper">
-                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (mL)" value="${ex.availVol || 10}" step="any" min="0" inputmode="decimal">
+                <input type="number" class="input-field" id="basicAvailVol" placeholder="Diluent (e.g. 10)" value="" step="any" min="0" inputmode="decimal">
                 <span class="input-suffix">mL</span>
               </div>
             </div>
           </div>
           <div class="quick-presets-row">
             <span class="preset-label">Vial Stock:</span>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500mg / 5mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500mg / 10mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1g / 10mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1g / 20mL</button>
-            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2g / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 5})">500 / 5mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 500, basicAvailVol: 10})">500 / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 10})">1,000 / 10mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 1000, basicAvailVol: 20})">1,000 / 20mL</button>
+            <button type="button" class="preset-chip-btn" onclick="setBasicMultiInputs({basicAvailableDose: 2000, basicAvailVol: 20})">2,000 / 20mL</button>
           </div>
         </div>
       `;
@@ -1334,7 +1401,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Total Volume to Infuse</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || 1000}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1352,7 +1419,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Infusion Time Duration</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTimeHours" placeholder="e.g. 8" value="${ex.hours || 8}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTimeHours" placeholder="e.g. 8" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">hours</span>
             </div>
             <div class="quick-presets-row">
@@ -1374,7 +1441,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Total Volume to Infuse</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || 1000}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1391,7 +1458,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Pump Flow Rate</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicPumpRate" placeholder="e.g. 125" value="125" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicPumpRate" placeholder="e.g. 125" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL/hr</span>
             </div>
             <div class="quick-presets-row">
@@ -1427,7 +1494,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Total Volume</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || 500}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1464,7 +1531,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="input-group">
             <div style="display: flex; gap: 8px;">
               <div class="input-wrapper" style="flex: 2;">
-                <input type="number" class="input-field" id="basicTimeVal" placeholder="e.g. 4" value="${ex.hours || 4}" step="any" min="0" inputmode="decimal">
+                <input type="number" class="input-field" id="basicTimeVal" placeholder="e.g. 4" value="" step="any" min="0" inputmode="decimal">
               </div>
               <select class="input-field" id="basicTimeUnit" style="flex: 1; background: rgba(15,23,42,0.8); color: #fff;">
                 <option value="hours" selected>Hours</option>
@@ -1489,7 +1556,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Total Volume</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || 500}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">mL</span>
             </div>
             <div class="quick-presets-row">
@@ -1518,7 +1585,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">3. Observed / Ordered Drop Rate</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTargetGtt" placeholder="e.g. 42" value="42" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicTargetGtt" placeholder="e.g. 42" value="" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">gtt/min</span>
             </div>
             <div class="quick-presets-row">
@@ -1552,17 +1619,21 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Dose Per Kilogram</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicDosePerKg" placeholder="e.g. 15" value="${ex.dosePerKg || 15}" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg/kg</span>
+              <input type="number" class="input-field" id="basicDosePerKg" placeholder="e.g. 15" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicDosePerKgUnit" class="input-unit-select" onchange="setBasicUnit('dosePerKg', this.value)">
+                <option value="mg" ${dosePerKgUnit === 'mg' ? 'selected' : ''}>mg/kg</option>
+                <option value="mcg" ${dosePerKgUnit === 'mcg' ? 'selected' : ''}>mcg/kg</option>
+                <option value="g" ${dosePerKgUnit === 'g' ? 'selected' : ''}>g/kg</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Dose/kg:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 5)">5 mg/kg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 10)">10 mg/kg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 15)">15 mg/kg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 20)">20 mg/kg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 25)">25 mg/kg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 50)">50 mg/kg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 5)">5</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 10)">10</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 15)">15</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 20)">20</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 25)">25</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicDosePerKg', 50)">50</button>
             </div>
           </div>
         </div>
@@ -1571,7 +1642,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Patient Body Weight</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${state.weight || ex.weight || 20}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 70" value="${state.weight || ''}" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">kg</span>
             </div>
             <div class="quick-presets-row">
@@ -1593,17 +1664,21 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">1. Total Administered Dose</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicTotalGivenDose" placeholder="e.g. 300" value="300" step="any" min="0" inputmode="decimal">
-              <span class="input-suffix">mg</span>
+              <input type="number" class="input-field" id="basicTotalGivenDose" placeholder="e.g. 300" value="" step="any" min="0" inputmode="decimal">
+              <select id="basicTotalGivenUnit" class="input-unit-select" onchange="setBasicUnit('totalGiven', this.value)">
+                <option value="mg" ${totalGivenUnit === 'mg' ? 'selected' : ''}>mg</option>
+                <option value="mcg" ${totalGivenUnit === 'mcg' ? 'selected' : ''}>mcg</option>
+                <option value="g" ${totalGivenUnit === 'g' ? 'selected' : ''}>g</option>
+              </select>
             </div>
             <div class="quick-presets-row">
               <span class="preset-label">Total Dose:</span>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 100)">100 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 250)">250 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 300)">300 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 500)">500 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 750)">750 mg</button>
-              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 1000)">1,000 mg</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 100)">100</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 250)">250</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 300)">300</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 500)">500</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 750)">750</button>
+              <button type="button" class="preset-chip-btn" onclick="setBasicInput('basicTotalGivenDose', 1000)">1,000</button>
             </div>
           </div>
         </div>
@@ -1612,7 +1687,7 @@ function renderBasicFormulaPanel(drug) {
           <div class="calc-section-title">2. Patient Body Weight</div>
           <div class="input-group">
             <div class="input-wrapper">
-              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${state.weight || ex.weight || 20}" step="any" min="0" inputmode="decimal">
+              <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 70" value="${state.weight || ''}" step="any" min="0" inputmode="decimal">
               <span class="input-suffix">kg</span>
             </div>
             <div class="quick-presets-row">
@@ -2226,15 +2301,32 @@ function recalculateBasicFormula(drug, resultEl) {
   let steps = [];
   let finalValText = '';
 
+  const renderEmptyCard = () => {
+    resultEl.innerHTML = `
+      <div class="result-card" style="text-align: center; padding: 26px 16px; border: 1px dashed var(--gray-300); background: var(--gray-50); box-shadow: none;">
+        <div style="font-size: 1.8rem; margin-bottom: 6px;">⌨️</div>
+        <div class="result-label" style="font-size: 0.95rem; font-weight: 600; color: var(--gray-700);">Enter Values or Tap a Preset</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">The answer and complete step-by-step math will generate automatically as you type.</div>
+      </div>
+    `;
+  };
+
   if (drug.formulaType === 'tabletCalc') {
+    const presUnit = document.getElementById('basicPrescribedUnit')?.value || state.basicUnits?.prescribed || 'mg';
+    const availUnit = document.getElementById('basicAvailableUnit')?.value || state.basicUnits?.available || 'mg';
+
     if (isForward) {
       const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
-      if (isNaN(pres) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = pres / avail;
+      if (isNaN(pres) || isNaN(avail) || avail <= 0) { renderEmptyCard(); return; }
+
+      const presMg = normalizeToBaseMg(pres, presUnit);
+      const availMg = normalizeToBaseMg(avail, availUnit);
+      const qty = presMg / availMg;
       const whole = Math.floor(qty);
       const frac = qty % 1;
       const fracText = frac === 0 ? `${qty} Whole Tablets` : `${whole > 0 ? whole + ' Whole + ' : ''}${formatNumber(frac, 2)} Tablet`;
+      const isCrossUnit = presUnit !== availUnit;
 
       resultCardHTML = `
         <div class="result-card">
@@ -2244,11 +2336,11 @@ function recalculateBasicFormula(drug, resultEl) {
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Prescribed Dose</div>
-              <div class="result-detail-value">${pres} mg</div>
+              <div class="result-detail-value">${pres} ${presUnit}${isCrossUnit ? ' (' + formatNumber(presMg, 4) + ' mg)' : ''}</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Available Strength</div>
-              <div class="result-detail-value">${avail} mg/tab</div>
+              <div class="result-detail-value">${avail} ${availUnit}/tab${isCrossUnit ? ' (' + formatNumber(availMg, 4) + ' mg/tab)' : ''}</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Tablet Breakdown</div>
@@ -2262,17 +2354,19 @@ function recalculateBasicFormula(drug, resultEl) {
         </div>
       `;
 
-      equationText = `Required Quantity (Tabs) = Prescribed Dose (mg) ÷ Available Dose per Tablet (mg/tab)`;
+      equationText = `Required Quantity (Tabs) = Prescribed Dose (${presUnit}) ÷ Available Dose per Tablet (${availUnit}/tab)`;
       steps = [
         {
           num: 'Step 1: Clinical Values',
-          desc: `Prescribed = ${pres} mg, Available Tablet Strength = ${avail} mg/tab`,
+          desc: `Prescribed = ${pres} ${presUnit}${isCrossUnit ? ' (converted to ' + formatNumber(presMg, 4) + ' mg)' : ''}, Available Tablet Strength = ${avail} ${availUnit}/tab${isCrossUnit ? ' (converted to ' + formatNumber(availMg, 4) + ' mg/tab)' : ''}`,
           math: `Equation: Quantity = Prescribed ÷ Available`
         },
         {
           num: 'Step 2: Solve Quantity',
           desc: `Divide prescribed dose by tablet strength`,
-          math: `${pres} mg ÷ ${avail} mg/tab = ${formatNumber(qty, 2)} Tablets`
+          math: isCrossUnit
+            ? `${formatNumber(presMg, 4)} mg ÷ ${formatNumber(availMg, 4)} mg/tab = ${formatNumber(qty, 2)} Tablets`
+            : `${pres} ${presUnit} ÷ ${avail} ${availUnit}/tab = ${formatNumber(qty, 2)} Tablets`
         },
         {
           num: 'Step 3: Clinical Administration',
@@ -2284,14 +2378,14 @@ function recalculateBasicFormula(drug, resultEl) {
     } else {
       const tabs = parseFloat(document.getElementById('basicGivenTabs')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
-      if (isNaN(tabs) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(tabs) || isNaN(avail) || avail <= 0) { renderEmptyCard(); return; }
       const totalDose = tabs * avail;
 
       resultCardHTML = `
         <div class="result-card">
           <div class="result-label">Delivered Total Dose</div>
           <div class="result-value">${formatNumber(totalDose, 2)}</div>
-          <div class="result-unit">mg</div>
+          <div class="result-unit">${availUnit}</div>
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Tablets Given</div>
@@ -2299,7 +2393,7 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Available Strength</div>
-              <div class="result-detail-value">${avail} mg/tab</div>
+              <div class="result-detail-value">${avail} ${availUnit}/tab</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Formula</div>
@@ -2307,35 +2401,42 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">${tabs} tabs × ${avail} mg</div>
+              <div class="result-detail-value">${tabs} tabs × ${avail} ${availUnit}</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Delivered Dose (mg) = Number of Tablets × Available Dose per Tablet (mg/tab)`;
+      equationText = `Delivered Dose (${availUnit}) = Number of Tablets × Available Dose per Tablet (${availUnit}/tab)`;
       steps = [
         {
           num: 'Step 1: Identify Given Units',
-          desc: `Administered Tablets = ${tabs} tabs, Tablet Strength = ${avail} mg/tab`,
+          desc: `Administered Tablets = ${tabs} tabs, Tablet Strength = ${avail} ${availUnit}/tab`,
           math: `Equation: Delivered Dose = Tablets × Strength`
         },
         {
           num: 'Step 2: Multiply Dosage',
           desc: `Multiply administered tablets by strength per tablet`,
-          math: `${tabs} tabs × ${avail} mg/tab = ${formatNumber(totalDose, 2)} mg`
+          math: `${tabs} tabs × ${avail} ${availUnit}/tab = ${formatNumber(totalDose, 2)} ${availUnit}`
         }
       ];
-      finalValText = `${formatNumber(totalDose, 2)} mg`;
+      finalValText = `${formatNumber(totalDose, 2)} ${availUnit}`;
     }
   } else if (drug.formulaType === 'liquidCalc') {
+    const presUnit = document.getElementById('basicPrescribedUnit')?.value || state.basicUnits?.prescribed || 'mg';
+    const availUnit = document.getElementById('basicAvailableUnit')?.value || state.basicUnits?.available || 'mg';
+
     if (isForward) {
       const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
       const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = (pres / avail) * vol;
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { renderEmptyCard(); return; }
+
+      const presMg = normalizeToBaseMg(pres, presUnit);
+      const availMg = normalizeToBaseMg(avail, availUnit);
+      const qty = (presMg / availMg) * vol;
       const conc = avail / vol;
+      const isCrossUnit = presUnit !== availUnit;
 
       resultCardHTML = `
         <div class="result-card">
@@ -2345,7 +2446,7 @@ function recalculateBasicFormula(drug, resultEl) {
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Stock Concentration</div>
-              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} ${availUnit}/mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Household Teaspoon</div>
@@ -2353,32 +2454,32 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Prescribed Dose</div>
-              <div class="result-detail-value">${pres} mg</div>
+              <div class="result-detail-value">${pres} ${presUnit}${isCrossUnit ? ' (' + formatNumber(presMg, 4) + ' mg)' : ''}</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Stock Formulation</div>
-              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+              <div class="result-detail-value">${avail} ${availUnit} in ${vol} mL</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Required Volume (mL) = [Prescribed Dose (mg) ÷ Available Dose (mg)] × Available Volume (mL)`;
+      equationText = `Required Volume (mL) = [Prescribed Dose (${presUnit}) ÷ Available Dose (${availUnit})] × Available Volume (mL)`;
       steps = [
         {
           num: 'Step 1: Concentration Determination',
-          desc: `Stock bottle contains ${avail} mg in ${vol} mL`,
-          math: `Stock Conc = ${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+          desc: `Stock bottle contains ${avail} ${availUnit} in ${vol} mL`,
+          math: `Stock Conc = ${avail} ${availUnit} ÷ ${vol} mL = ${formatNumber(conc, 2)} ${availUnit}/mL`
         },
         {
           num: 'Step 2: Calculate Dose Ratio',
-          desc: `Prescribed dose divided by available dose`,
-          math: `${pres} mg ÷ ${avail} mg = ${formatNumber(pres / avail, 4)}`
+          desc: isCrossUnit ? `Convert and divide: ${formatNumber(presMg, 4)} mg ÷ ${formatNumber(availMg, 4)} mg` : `Prescribed dose divided by available dose`,
+          math: `Ratio = ${formatNumber(presMg / availMg, 4)}`
         },
         {
           num: 'Step 3: Solve Volume to Measure',
           desc: `Multiply dose ratio by available volume`,
-          math: `(${pres} ÷ ${avail}) × ${vol} mL = ${formatNumber(qty, 2)} mL`
+          math: `(${formatNumber(presMg / availMg, 4)}) × ${vol} mL = ${formatNumber(qty, 2)} mL`
         },
         {
           num: 'Step 4: Household Measure Equivalent',
@@ -2391,7 +2492,7 @@ function recalculateBasicFormula(drug, resultEl) {
       const adminVol = parseFloat(document.getElementById('basicAdminVol')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
       const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { renderEmptyCard(); return; }
       const dose = (adminVol / vol) * avail;
       const conc = avail / vol;
 
@@ -2399,7 +2500,7 @@ function recalculateBasicFormula(drug, resultEl) {
         <div class="result-card">
           <div class="result-label">Delivered Liquid Dose</div>
           <div class="result-value">${formatNumber(dose, 2)}</div>
-          <div class="result-unit">mg</div>
+          <div class="result-unit">${availUnit}</div>
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Administered Volume</div>
@@ -2407,43 +2508,50 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Stock Concentration</div>
-              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} ${availUnit}/mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Stock Formulation</div>
-              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+              <div class="result-detail-value">${avail} ${availUnit} in ${vol} mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Formula Proof</div>
-              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} mg</div>
+              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} ${availUnit}</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Delivered Dose (mg) = [Administered Volume (mL) ÷ Available Volume (mL)] × Available Dose (mg)`;
+      equationText = `Delivered Dose (${availUnit}) = [Administered Volume (mL) ÷ Available Volume (mL)] × Available Dose (${availUnit})`;
       steps = [
         {
           num: 'Step 1: Stock Concentration',
-          desc: `${avail} mg in ${vol} mL`,
-          math: `${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+          desc: `${avail} ${availUnit} in ${vol} mL`,
+          math: `${avail} ${availUnit} ÷ ${vol} mL = ${formatNumber(conc, 2)} ${availUnit}/mL`
         },
         {
           num: 'Step 2: Solve Delivered Dose',
           desc: `Multiply administered volume by stock concentration`,
-          math: `${adminVol} mL × ${formatNumber(conc, 2)} mg/mL = ${formatNumber(dose, 2)} mg`
+          math: `${adminVol} mL × ${formatNumber(conc, 2)} ${availUnit}/mL = ${formatNumber(dose, 2)} ${availUnit}`
         }
       ];
-      finalValText = `${formatNumber(dose, 2)} mg`;
+      finalValText = `${formatNumber(dose, 2)} ${availUnit}`;
     }
   } else if (drug.formulaType === 'injectionCalc') {
+    const presUnit = document.getElementById('basicPrescribedUnit')?.value || state.basicUnits?.prescribed || 'mg';
+    const availUnit = document.getElementById('basicAvailableUnit')?.value || state.basicUnits?.available || 'mg';
+
     if (isForward) {
       const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
       const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { resultEl.innerHTML = ''; return; }
-      const qty = (pres / avail) * vol;
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0 || vol <= 0) { renderEmptyCard(); return; }
+
+      const presMg = normalizeToBaseMg(pres, presUnit);
+      const availMg = normalizeToBaseMg(avail, availUnit);
+      const qty = (presMg / availMg) * vol;
       const conc = avail / vol;
+      const isCrossUnit = presUnit !== availUnit;
 
       resultCardHTML = `
         <div class="result-card">
@@ -2453,15 +2561,15 @@ function recalculateBasicFormula(drug, resultEl) {
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Vial Concentration</div>
-              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} ${availUnit}/mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Prescribed Dose</div>
-              <div class="result-detail-value">${pres} mg</div>
+              <div class="result-detail-value">${pres} ${presUnit}${isCrossUnit ? ' (' + formatNumber(presMg, 4) + ' mg)' : ''}</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Vial Total Strength</div>
-              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+              <div class="result-detail-value">${avail} ${availUnit} in ${vol} mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Formula Proof</div>
@@ -2471,17 +2579,17 @@ function recalculateBasicFormula(drug, resultEl) {
         </div>
       `;
 
-      equationText = `Required Volume (mL) = [Prescribed Dose (mg) ÷ Available Dose (mg)] × Diluent Volume (mL)`;
+      equationText = `Required Volume (mL) = [Prescribed Dose (${presUnit}) ÷ Available Dose (${availUnit})] × Diluent Volume (mL)`;
       steps = [
         {
           num: 'Step 1: Reconstitution Concentration',
-          desc: `Reconstituted vial contains ${avail} mg in ${vol} mL diluent`,
-          math: `Vial Conc = ${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+          desc: `Reconstituted vial contains ${avail} ${availUnit} in ${vol} mL diluent`,
+          math: `Vial Conc = ${avail} ${availUnit} ÷ ${vol} mL = ${formatNumber(conc, 2)} ${availUnit}/mL`
         },
         {
           num: 'Step 2: Solve Injectable Volume',
-          desc: `Prescribed dose divided by concentration`,
-          math: `${pres} mg ÷ ${formatNumber(conc, 2)} mg/mL = ${formatNumber(qty, 2)} mL`
+          desc: isCrossUnit ? `Prescribed dose divided by concentration (with unit normalization)` : `Prescribed dose divided by concentration`,
+          math: `Volume = ${formatNumber(qty, 2)} mL`
         }
       ];
       finalValText = `${formatNumber(qty, 2)} mL`;
@@ -2489,7 +2597,7 @@ function recalculateBasicFormula(drug, resultEl) {
       const adminVol = parseFloat(document.getElementById('basicAdminVol')?.value);
       const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
       const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
-      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(adminVol) || isNaN(avail) || isNaN(vol) || vol <= 0) { renderEmptyCard(); return; }
       const dose = (adminVol / vol) * avail;
       const conc = avail / vol;
 
@@ -2497,7 +2605,7 @@ function recalculateBasicFormula(drug, resultEl) {
         <div class="result-card">
           <div class="result-label">Delivered Injected Dose</div>
           <div class="result-value">${formatNumber(dose, 2)}</div>
-          <div class="result-unit">mg</div>
+          <div class="result-unit">${availUnit}</div>
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Volume Injected</div>
@@ -2505,40 +2613,40 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Reconstituted Conc</div>
-              <div class="result-detail-value">${formatNumber(conc, 2)} mg/mL</div>
+              <div class="result-detail-value">${formatNumber(conc, 2)} ${availUnit}/mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Vial Preparation</div>
-              <div class="result-detail-value">${avail} mg in ${vol} mL</div>
+              <div class="result-detail-value">${avail} ${availUnit} in ${vol} mL</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} mg</div>
+              <div class="result-detail-value">(${adminVol} ÷ ${vol}) × ${avail} ${availUnit}</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Delivered Dose (mg) = [Injected Volume (mL) ÷ Diluent Volume (mL)] × Vial Dose (mg)`;
+      equationText = `Delivered Dose (${availUnit}) = [Injected Volume (mL) ÷ Diluent Volume (mL)] × Vial Dose (${availUnit})`;
       steps = [
         {
           num: 'Step 1: Vial Concentration',
-          desc: `${avail} mg reconstituted in ${vol} mL`,
-          math: `${avail} mg ÷ ${vol} mL = ${formatNumber(conc, 2)} mg/mL`
+          desc: `${avail} ${availUnit} reconstituted in ${vol} mL`,
+          math: `${avail} ${availUnit} ÷ ${vol} mL = ${formatNumber(conc, 2)} ${availUnit}/mL`
         },
         {
           num: 'Step 2: Calculate Administered Dose',
           desc: `Multiply injected volume by concentration`,
-          math: `${adminVol} mL × ${formatNumber(conc, 2)} mg/mL = ${formatNumber(dose, 2)} mg`
+          math: `${adminVol} mL × ${formatNumber(conc, 2)} ${availUnit}/mL = ${formatNumber(dose, 2)} ${availUnit}`
         }
       ];
-      finalValText = `${formatNumber(dose, 2)} mg`;
+      finalValText = `${formatNumber(dose, 2)} ${availUnit}`;
     }
   } else if (drug.formulaType === 'ivFlowRateCalc') {
     if (isForward) {
       const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
       const hours = parseFloat(document.getElementById('basicTimeHours')?.value);
-      if (isNaN(vol) || isNaN(hours) || hours <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(vol) || isNaN(hours) || hours <= 0) { renderEmptyCard(); return; }
       const rate = vol / hours;
       const macro15 = (rate * 15) / 60;
       const macro20 = (rate * 20) / 60;
@@ -2597,7 +2705,7 @@ function recalculateBasicFormula(drug, resultEl) {
     } else {
       const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
       const rate = parseFloat(document.getElementById('basicPumpRate')?.value);
-      if (isNaN(vol) || isNaN(rate) || rate <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(vol) || isNaN(rate) || rate <= 0) { renderEmptyCard(); return; }
       const hours = vol / rate;
       const hrsInt = Math.floor(hours);
       const minsInt = Math.round((hours % 1) * 60);
@@ -2654,7 +2762,7 @@ function recalculateBasicFormula(drug, resultEl) {
       const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
       const timeVal = parseFloat(document.getElementById('basicTimeVal')?.value);
       const timeUnit = document.getElementById('basicTimeUnit')?.value || 'hours';
-      if (isNaN(vol) || isNaN(timeVal) || timeVal <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(vol) || isNaN(timeVal) || timeVal <= 0) { renderEmptyCard(); return; }
       const timeMin = timeUnit === 'hours' ? timeVal * 60 : timeVal;
       const gttMin = (vol * dropFactor) / timeMin;
       const equivRate = vol / (timeMin / 60);
@@ -2708,7 +2816,7 @@ function recalculateBasicFormula(drug, resultEl) {
       const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
       const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
       const targetGtt = parseFloat(document.getElementById('basicTargetGtt')?.value);
-      if (isNaN(vol) || isNaN(targetGtt) || targetGtt <= 0) { resultEl.innerHTML = ''; return; }
+      if (isNaN(vol) || isNaN(targetGtt) || targetGtt <= 0) { renderEmptyCard(); return; }
       const totalDrops = vol * dropFactor;
       const timeMin = totalDrops / targetGtt;
       const hours = timeMin / 60;
@@ -2765,23 +2873,38 @@ function recalculateBasicFormula(drug, resultEl) {
     if (isForward) {
       const dosePerKg = parseFloat(document.getElementById('basicDosePerKg')?.value);
       const wt = parseFloat(document.getElementById('basicWeight')?.value);
-      if (isNaN(dosePerKg) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
+      const unit = document.getElementById('basicDosePerKgUnit')?.value || state.basicUnits?.dosePerKg || 'mg';
+      if (isNaN(dosePerKg) || isNaN(wt) || wt <= 0) { renderEmptyCard(); return; }
       const reqDose = dosePerKg * wt;
-      const grams = reqDose / 1000;
+
+      let altUnitVal = '';
+      let altUnitLabel = '';
+      if (unit === 'mg') {
+        altUnitVal = `${formatNumber(reqDose / 1000, 3)} g`;
+        altUnitLabel = 'Gram Equivalent';
+      } else if (unit === 'mcg') {
+        altUnitVal = `${formatNumber(reqDose / 1000, 3)} mg`;
+        altUnitLabel = 'Milligram Equivalent';
+      } else if (unit === 'g') {
+        altUnitVal = `${formatNumber(reqDose * 1000, 1)} mg`;
+        altUnitLabel = 'Milligram Equivalent';
+      }
 
       resultCardHTML = `
         <div class="result-card">
           <div class="result-label">Required Total Dose</div>
           <div class="result-value">${formatNumber(reqDose, 2)}</div>
-          <div class="result-unit">mg</div>
+          <div class="result-unit">${unit}</div>
           <div class="result-details">
-            <div class="result-detail">
-              <div class="result-detail-label">Gram Equivalent</div>
-              <div class="result-detail-value">${formatNumber(grams, 3)} grams</div>
-            </div>
+            ${altUnitVal ? `
+              <div class="result-detail">
+                <div class="result-detail-label">${altUnitLabel}</div>
+                <div class="result-detail-value">${altUnitVal}</div>
+              </div>
+            ` : ''}
             <div class="result-detail">
               <div class="result-detail-label">Dose per kg</div>
-              <div class="result-detail-value">${dosePerKg} mg/kg</div>
+              <div class="result-detail-value">${dosePerKg} ${unit}/kg</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Patient Weight</div>
@@ -2789,46 +2912,49 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Daily BID (q12h)</div>
-              <div class="result-detail-value">${formatNumber(reqDose * 2, 2)} mg/day</div>
+              <div class="result-detail-value">${formatNumber(reqDose * 2, 2)} ${unit}/day</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Required Total Dose (mg) = Dose per Kilogram (mg/kg) × Patient Weight (kg)`;
+      equationText = `Required Total Dose (${unit}) = Dose per Kilogram (${unit}/kg) × Patient Weight (kg)`;
       steps = [
         {
           num: 'Step 1: Clinical Values',
-          desc: `Dose Specification = ${dosePerKg} mg/kg, Patient Weight = ${wt} kg`,
+          desc: `Dose Specification = ${dosePerKg} ${unit}/kg, Patient Weight = ${wt} kg`,
           math: `Total Dose = Dose/kg × Weight`
         },
         {
           num: 'Step 2: Solve Total Dose',
           desc: `Multiply dose per kg by patient weight`,
-          math: `${dosePerKg} mg/kg × ${wt} kg = ${formatNumber(reqDose, 2)} mg`
-        },
-        {
-          num: 'Step 3: Unit Conversion to Grams',
-          desc: `Divide milligrams by 1000`,
-          math: `${formatNumber(reqDose, 2)} mg ÷ 1000 = ${formatNumber(grams, 3)} g`
+          math: `${dosePerKg} ${unit}/kg × ${wt} kg = ${formatNumber(reqDose, 2)} ${unit}`
         }
       ];
-      finalValText = `${formatNumber(reqDose, 2)} mg (${formatNumber(grams, 3)} g)`;
+      if (altUnitVal) {
+        steps.push({
+          num: 'Step 3: Unit Equivalent',
+          desc: altUnitLabel,
+          math: altUnitVal
+        });
+      }
+      finalValText = `${formatNumber(reqDose, 2)} ${unit}${altUnitVal ? ' (' + altUnitVal + ')' : ''}`;
     } else {
       const totalGivenDose = parseFloat(document.getElementById('basicTotalGivenDose')?.value);
       const wt = parseFloat(document.getElementById('basicWeight')?.value);
-      if (isNaN(totalGivenDose) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
+      const unit = document.getElementById('basicTotalGivenUnit')?.value || state.basicUnits?.totalGiven || 'mg';
+      if (isNaN(totalGivenDose) || isNaN(wt) || wt <= 0) { renderEmptyCard(); return; }
       const deliveredDosePerKg = totalGivenDose / wt;
 
       resultCardHTML = `
         <div class="result-card">
           <div class="result-label">Delivered Dose per kg</div>
           <div class="result-value">${formatNumber(deliveredDosePerKg, 2)}</div>
-          <div class="result-unit">mg/kg</div>
+          <div class="result-unit">${unit}/kg</div>
           <div class="result-details">
             <div class="result-detail">
               <div class="result-detail-label">Total Given Dose</div>
-              <div class="result-detail-value">${totalGivenDose} mg</div>
+              <div class="result-detail-value">${totalGivenDose} ${unit}</div>
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Patient Weight</div>
@@ -2840,26 +2966,26 @@ function recalculateBasicFormula(drug, resultEl) {
             </div>
             <div class="result-detail">
               <div class="result-detail-label">Proof</div>
-              <div class="result-detail-value">${totalGivenDose} mg ÷ ${wt} kg</div>
+              <div class="result-detail-value">${totalGivenDose} ${unit} ÷ ${wt} kg</div>
             </div>
           </div>
         </div>
       `;
 
-      equationText = `Delivered Dose per kg (mg/kg) = Total Administered Dose (mg) ÷ Patient Weight (kg)`;
+      equationText = `Delivered Dose per kg (${unit}/kg) = Total Administered Dose (${unit}) ÷ Patient Weight (kg)`;
       steps = [
         {
           num: 'Step 1: Clinical Values',
-          desc: `Total Given Dose = ${totalGivenDose} mg, Patient Weight = ${wt} kg`,
+          desc: `Total Given Dose = ${totalGivenDose} ${unit}, Patient Weight = ${wt} kg`,
           math: `Dose/kg = Total Dose ÷ Weight`
         },
         {
           num: 'Step 2: Solve Delivered Dose/kg',
           desc: `Divide total administered dose by patient weight`,
-          math: `${totalGivenDose} mg ÷ ${wt} kg = ${formatNumber(deliveredDosePerKg, 2)} mg/kg`
+          math: `${totalGivenDose} ${unit} ÷ ${wt} kg = ${formatNumber(deliveredDosePerKg, 2)} ${unit}/kg`
         }
       ];
-      finalValText = `${formatNumber(deliveredDosePerKg, 2)} mg/kg`;
+      finalValText = `${formatNumber(deliveredDosePerKg, 2)} ${unit}/kg`;
     }
   }
 
@@ -3277,7 +3403,7 @@ function generateDosingTableData(drug) {
         col6: `${d} mg ÷ ${avail} mg/tab = ${formatNumber(tabs, 2)} Tabs`
       };
     });
-    return { drug, concLabel: `Tablet Strength: ${avail} mg/tab`, weight: null, customHeaders, rows };
+    return { drug, concLabel: `Tablet Strength: ${avail} ${availUnit}/tab`, weight: null, customHeaders, rows };
   }
 
   if (drug.formulaType === 'liquidCalc') {

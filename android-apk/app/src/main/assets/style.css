@@ -956,6 +956,33 @@ body {
   pointer-events: none;
 }
 
+.input-unit-select {
+  position: absolute;
+  right: 8px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  background: var(--gray-50);
+  color: var(--gray-700);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.input-unit-select:focus,
+.input-unit-select:hover {
+  border-color: var(--orange-500);
+  background: var(--white);
+  color: var(--orange-700);
+}
+
+.input-wrapper:has(.input-unit-select) .input-field {
+  padding-right: 76px;
+}
+
 /* ── Quick-Tap Preset Chips & Rows ── */
 .quick-presets-row {
   display: flex;
