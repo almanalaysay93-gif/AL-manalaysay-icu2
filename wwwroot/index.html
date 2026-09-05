@@ -105,6 +105,16 @@
           <line x1="9" y1="11" x2="15" y2="11" />
         </svg>
       </button>
+      <!-- Drug Calculations Made Easy Button -->
+      <button class="header-btn icu-action-btn category-bar-btn" onclick="openBasicFormulasModal()" title="Drug Calculations Made Easy" aria-label="Open Drug Calculations Made Easy panel">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </button>
       <!-- AI Pharmacy Chatbot Button -->
       <button class="header-btn icu-action-btn category-bar-btn" onclick="openChatbot()" title="AI Critical Care Pharmacy Assistant" aria-label="Open AI Pharmacy Assistant">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -223,6 +233,106 @@
 
       <div class="dosing-table-body" id="dosingTableBody">
         <!-- Dynamically generated table content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ Drug Calculations Made Easy Modal ════════ -->
+  <div class="dosing-table-overlay" id="basicFormulasOverlay" onclick="if(event.target===this) closeBasicFormulasModal()">
+    <div class="dosing-table-modal" style="max-width: 850px;">
+      <div class="dosing-table-header">
+        <div>
+          <h3>📝 Drug Calculations Made Easy</h3>
+          <div class="dosing-table-sub">Quick Drug Calculation Formulas with Worked Examples</div>
+        </div>
+        <button class="math-calc-close" onclick="closeBasicFormulasModal()" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="dosing-table-body" style="padding: 20px;">
+        <div class="basic-formulas-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px;">
+          
+          <!-- Formula 1: Tablet Calculation -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--orange-500); border-radius: 12px; padding: 16px;">
+            <h4 style="color: var(--orange-500); margin-bottom: 8px; display:flex; align-items:center; gap:8px;">💊 1. Tablet Calculation</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Required Quantity = Prescribed Dose ÷ Available Dose
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • Prescribed Dose = 500 mg<br>
+              • Available Dose = 250 mg / tablet<br>
+              • <strong>Answer:</strong> 500 ÷ 250 = <span style="color:#22c55e; font-weight:bold;">2 Tablets</span>
+            </div>
+          </div>
+
+          <!-- Formula 2: Liquid Calculation -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid #38bdf8; border-radius: 12px; padding: 16px;">
+            <h4 style="color: #38bdf8; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">🧪 2. Liquid Calculation</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Required Vol = (Prescribed ÷ Available) × Vol Available
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • Prescribed Dose = 250 mg<br>
+              • Available Dose = 125 mg / 5 mL<br>
+              • <strong>Answer:</strong> (250 ÷ 125) × 5 = <span style="color:#22c55e; font-weight:bold;">10 mL</span>
+            </div>
+          </div>
+
+          <!-- Formula 3: Injection Calculation -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid #a855f7; border-radius: 12px; padding: 16px;">
+            <h4 style="color: #a855f7; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">💉 3. Injection Calculation</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Required Vol = (Prescribed ÷ Available) × Diluent Vol
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • Prescribed Dose = 500 mg<br>
+              • Available Dose = 1 g (1000 mg) / 10 mL<br>
+              • <strong>Answer:</strong> (500 ÷ 1000) × 10 = <span style="color:#22c55e; font-weight:bold;">5 mL</span>
+            </div>
+          </div>
+
+          <!-- Formula 4: IV Flow Rate (mL/hr) -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid #22c55e; border-radius: 12px; padding: 16px;">
+            <h4 style="color: #22c55e; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">💧 4. IV Flow Rate (mL/hr)</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Flow Rate (mL/hr) = Total Volume (mL) ÷ Time (hours)
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • Total Volume = 1000 mL over 8 hours<br>
+              • <strong>Answer:</strong> 1000 ÷ 8 = <span style="color:#22c55e; font-weight:bold;">125 mL/hr</span>
+            </div>
+          </div>
+
+          <!-- Formula 5: Drops Per Minute (gtt/min) -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid #eab308; border-radius: 12px; padding: 16px;">
+            <h4 style="color: #eab308; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">⏱️ 5. Drops Per Minute (gtt/min)</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Flow Rate (gtt/min) = (Volume × Drop Factor) ÷ Time (min)
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • 500 mL over 4 hours (240 min), Drop Factor = 20 gtt/mL<br>
+              • <strong>Answer:</strong> (500 × 20) ÷ 240 = <span style="color:#22c55e; font-weight:bold;">42 gtt/min</span>
+            </div>
+          </div>
+
+          <!-- Formula 6: Weight-Based Dosing -->
+          <div class="ref-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid #ec4899; border-radius: 12px; padding: 16px;">
+            <h4 style="color: #ec4899; margin-bottom: 8px; display:flex; align-items:center; gap:8px;">⚖️ 6. Weight-Based Dosing</h4>
+            <div style="font-size: 0.85rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; font-family: monospace; color: #38bdf8; margin-bottom: 10px;">
+              Required Dose = Dose/kg × Patient Weight (kg)
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+              <strong>Worked Example:</strong><br>
+              • Dose/kg = 15 mg/kg, Patient Weight = 20 kg<br>
+              • <strong>Answer:</strong> 15 × 20 = <span style="color:#22c55e; font-weight:bold;">300 mg</span>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>

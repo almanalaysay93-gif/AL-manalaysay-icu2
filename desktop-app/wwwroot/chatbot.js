@@ -9,6 +9,15 @@
 const PHARMACY_KB = {
   // ── Complete Drug Monographs ──
   monographs: {
+    basicFormulas: {
+      name: 'Drug Calculations Made Easy Formulas',
+      class: 'Bedside Clinical Math & Dosing Formulas',
+      mechanism: '6 Fundamental Formulas: 1. Tablet (Prescribed ÷ Available), 2. Liquid ((Prescribed ÷ Available) × Vol), 3. Injection ((Prescribed ÷ Available) × Vol), 4. IV Flow Rate (Vol ÷ Hours), 5. Drops/min ((Vol × Drop Factor) ÷ Min), 6. Weight-based (Dose/kg × Weight).',
+      dosing: 'Tablet Qty = Prescribed / Available. Liquid Vol = (Prescribed / Available) * Vol. Injection Vol = (Prescribed / Available) * Vol. IV Rate (mL/hr) = Volume / Hours. gtt/min = (Volume * Drop Factor) / Minutes. Weight Dose = Dose/kg * kg.',
+      pharmacokinetics: 'Immediate bedside calculations for accurate drug administration and infusion pump settings.',
+      adverseEffects: 'Prevents dosing errors, underdosing, or overdose.',
+      warnings: 'Always double-check drop factor (10, 15, 20, 60 gtt/mL) and confirm units (mg vs mcg, mL/hr vs gtt/min).'
+    },
     heparin: {
       name: 'Heparin (Unfractionated)',
       class: 'Parenteral Anticoagulant (Indirect Thrombin & Factor Xa Inhibitor)',
@@ -37,7 +46,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ First-line inotrope in cardiogenic shock or persistent septic shock hypoperfusion with adequate blood pressure. Ensure intravascular volume repletion before initiating.'
     },
     norepinephrine: {
-      name: 'Norepinephrine (Levophed)',
+      name: 'Norepinephrine',
       class: 'Potent α1 & β1 Adrenergic Vasopressor',
       mechanism: 'Potent α1 agonist causing intense arterial and venous vasoconstriction (increases SVR & MAP), with moderate β1 cardiac inotropic support.',
       dosing: 'Continuous Infusion: 0.01–3.0 mcg/kg/min. Standard 50cc Prep: 4 mg/50cc (80 mcg/cc) → 0.05 mcg/kg/min in 70kg = 2.6 mL/hr.',
@@ -46,7 +55,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ First-line vasopressor for septic and distributive shock. Administer via CENTRAL LINE. Central line extravasation antidote: Phentolamine 5–10 mg diluted in 10 mL NS local infiltration.'
     },
     epinephrine: {
-      name: 'Epinephrine (Adrenaline)',
+      name: 'Epinephrine',
       class: 'Potent Non-selective α1, α2, β1, β2 Adrenergic Agonist',
       mechanism: 'Low doses (0.01–0.05 mcg/kg/min) = β1/β2 agonist (cardiac output & bronchodilation); High doses (>0.05) = α1 vasoconstriction.',
       dosing: 'Anaphylaxis IM: 0.3–0.5 mg IM (1:1,000). ACLS Cardiac Arrest: 1 mg IV q3-5min (1:10,000). Continuous Pressor: 0.01–0.5 mcg/kg/min.',
@@ -55,7 +64,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ First-line for Anaphylaxis & ACLS. Third-line pressor in septic shock. High doses cause profound splanchnic vasoconstriction.'
     },
     vasopressin: {
-      name: 'Vasopressin (Argipressin / ADH)',
+      name: 'Vasopressin',
       class: 'Direct V1 & V2 Receptor Agonist (Non-adrenergic Vasopressor)',
       mechanism: 'Stimulates vascular smooth muscle V1 receptors (vasoconstriction) and renal collecting duct V2 receptors (water reabsorption).',
       dosing: 'Septic Shock Fixed Dose: 0.03 units/min (1.8 units/hr). Range: 0.01–0.04 units/min. NOT weight-based!',
@@ -64,7 +73,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ Administer via CENTRAL VENOUS LINE. Standard prep: 20 units / 100 mL (0.2 u/mL) → 0.03 u/min = 9.0 mL/hr.'
     },
     isoket: {
-      name: 'Isoket (Isosorbide Dinitrate)',
+      name: 'Isosorbide Dinitrate',
       class: 'Nitrate Vasodilator (Venous & Coronary Arterial Dilator)',
       mechanism: 'Releases nitric oxide in vascular smooth muscle, increasing cGMP to cause venodilation (reduces preload) and coronary vasodilation.',
       dosing: 'Continuous Infusion: 1–10 mg/hr (non-weight based). Standard 100cc Prep: 10 mg/100cc (0.1 mg/cc) → 2 mg/hr = 20 mL/hr.',
@@ -73,7 +82,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ Contraindicated with PDE-5 inhibitors (Sildenafil, Tadalafil) due to fatal hypotension.'
     },
     ntg: {
-      name: 'NTG (Nitroglycerin / Glyceryl Trinitrate)',
+      name: 'Nitroglycerin',
       class: 'Direct Nitrate Vasodilator',
       mechanism: 'Venous dilator at low doses (reduces preload/LVEDP); arterial & coronary dilator at higher doses (reduces afterload & relieves ischemia).',
       dosing: 'Continuous Infusion: 0.5–10 mg/hr (5–200 mcg/min). IV Push Bolus: 0.1 mg/cc (1 mg + 9 cc PNSS).',
@@ -91,7 +100,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ Change peripheral IV line site q12h to prevent thrombophlebitis. Preferred in neurocritical care (ischemic/hemorrhagic stroke & SAH).'
     },
     cordarone: {
-      name: 'Cordarone (Amiodarone HCl)',
+      name: 'Amiodarone',
       class: 'Class III Antiarrhythmic Agent (Multi-channel Blocker)',
       mechanism: 'Blocks K+ channels (prolongs action potential duration/QT interval), Na+ channels, Ca2+ channels, and non-competitively blocks α/β receptors.',
       dosing: 'VF / Pulseless VT ACLS: 300 mg IV push, optional 150 mg second dose. VT with Pulse Loading: 150 mg over 10 min. Continuous Infusion: 1 mg/min x 6 hr (360 mg), then 0.5 mg/min x 18 hr (540 mg).',
@@ -109,7 +118,7 @@ const PHARMACY_KB = {
       warnings: '⚠️ Ultra-short half-life allows rapid offset within 10–30 min of stopping infusion. Incompatible with Furosemide and Bicarbonate.'
     },
     precedex: {
-      name: 'Precedex (Dexmedetomidine)',
+      name: 'Dexmedetomidine',
       class: 'Selective Central α2-Adrenergic Receptor Agonist',
       mechanism: 'Stimulates central presynaptic α2 receptors in the locus coeruleus, inhibiting norepinephrine release to produce sedation without respiratory depression.',
       dosing: 'Loading Dose: 1 mcg/kg over 10 min (frequently omitted to avoid bradycardia/hypotension). Maintenance Infusion: 0.2–1.5 mcg/kg/h.',
@@ -405,10 +414,10 @@ function generateOptionsMenu(userQuery) {
     { label: '💧 Vasopressin Protocol', query: 'What is the standard fixed dose for Vasopressin?' },
     { label: '💉 Dopamine Pressor', query: 'Tell me about Dopamine dosing and indications' },
     { label: '🫀 Dobutamine Inotrope', query: 'Tell me about Dobutamine inotrope dosing' },
-    { label: '⚡ Norepinephrine (Levophed)', query: 'Norepinephrine vasopressor dosing and extravasation' },
+    { label: '⚡ Norepinephrine', query: 'Norepinephrine vasopressor dosing and extravasation' },
     { label: '💉 Epinephrine Protocol', query: 'Epinephrine anaphylaxis and pressor dosing' },
-    { label: '🫀 Cordarone (Amiodarone)', query: 'Amiodarone ACLS dosing and Y-site incompatibility' },
-    { label: '💤 Precedex (Dexmedetomidine)', query: 'Precedex ICU sedation protocol' },
+    { label: '🫀 Amiodarone', query: 'Amiodarone ACLS dosing and Y-site incompatibility' },
+    { label: '💤 Dexmedetomidine', query: 'Dexmedetomidine ICU sedation protocol' },
     { label: '⚡ Esmolol Beta-Blocker', query: 'Esmolol infusion dosing and half-life' },
     { label: '🫁 Streptokinase Thrombolytic', query: 'Streptokinase thrombolytic protocol' },
     { label: '🧪 Propofol & PRIS', query: 'Tell me about Propofol Infusion Syndrome (PRIS)' },

@@ -91,7 +91,7 @@ const DRUGS = {
     weightBased: true,
     formulaType: 'weightPerMin',
     doseRange: { min: 0.01, max: 3 },
-    bolus: 'Syringe 1: Levo 2 mg + 48 cc PNSS → Syringe 2: 2 cc from S1 + 8 cc PNSS. Bolus conc: 0.0008 mg/cc.',
+    bolus: 'Syringe 1: Norepinephrine 2 mg + 48 cc PNSS → Syringe 2: 2 cc from S1 + 8 cc PNSS. Bolus conc: 0.0008 mg/cc.',
     concentrations: {
       '50cc': [
         { label: 'Single', drugMg: 4.0, drugVol: 4, diluent: 46, totalVol: 50, concMcgPerCc: 80, concNote: '4 mg (4 cc) + 46 cc PNSS (80 mcg/cc)' },
@@ -122,7 +122,7 @@ const DRUGS = {
 
   epinephrine: {
     name: 'Epinephrine',
-    generic: 'Adrenaline',
+    generic: 'Epinephrine HCl',
     category: 'vasopressor',
     categoryLabel: 'Vasopressor',
     icon: '💉',
@@ -179,7 +179,7 @@ const DRUGS = {
   },
 
   isoket: {
-    name: 'Isoket',
+    name: 'Isosorbide Dinitrate',
     generic: 'Isosorbide Dinitrate',
     category: 'vasodilator',
     categoryLabel: 'Vasodilator',
@@ -209,8 +209,8 @@ const DRUGS = {
   },
 
   ntg: {
-    name: 'NTG',
-    generic: 'Glyceryl Trinitrate (Nitroglycerin)',
+    name: 'Nitroglycerin',
+    generic: 'Nitroglycerin',
     category: 'vasodilator',
     categoryLabel: 'Vasodilator',
     icon: '🫀',
@@ -277,8 +277,8 @@ const DRUGS = {
   },
 
   cordarone: {
-    name: 'Cordarone',
-    generic: 'Amiodarone',
+    name: 'Amiodarone',
+    generic: 'Amiodarone HCl',
     category: 'antiarrhythmic',
     categoryLabel: 'Antiarrhythmic',
     icon: '⚡',
@@ -327,8 +327,8 @@ const DRUGS = {
   },
 
   precedex: {
-    name: 'Precedex',
-    generic: 'Dexmedetomidine',
+    name: 'Dexmedetomidine',
+    generic: 'Dexmedetomidine HCl',
     category: 'sedative',
     categoryLabel: 'Sedative',
     icon: '😴',
@@ -516,11 +516,96 @@ const DRUGS = {
     formulaType: 'customDrip',
     notes: 'Use this universal calculator for any custom drug dose, weight, or container volume not in preset tables.',
   },
+
+  tabletCalc: {
+    name: 'Tablet Calculation',
+    generic: 'Required Quantity = Prescribed / Available',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '💊',
+    formulation: 'Tablets / Capsules',
+    doseUnit: 'Tablets',
+    weightBased: false,
+    formulaType: 'tabletCalc',
+    notes: 'Formula: Prescribed Dose ÷ Available Dose per Tablet. Example: 500 mg prescribed ÷ 250 mg available = 2 Tablets.',
+    example: { prescribed: 500, available: 250 }
+  },
+
+  liquidCalc: {
+    name: 'Liquid Calculation',
+    generic: 'Required Vol = (Prescribed / Available) × Vol Available',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '🧪',
+    formulation: 'Oral Liquid / Suspension',
+    doseUnit: 'mL',
+    weightBased: false,
+    formulaType: 'liquidCalc',
+    notes: 'Formula: (Prescribed Dose ÷ Available Dose) × Available Volume. Example: (250 mg ÷ 125 mg) × 5 mL = 10 mL.',
+    example: { prescribed: 250, available: 125, availVol: 5 }
+  },
+
+  injectionCalc: {
+    name: 'Injection Calculation',
+    generic: 'Required Vol = (Prescribed / Available) × Diluent Vol',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '💉',
+    formulation: 'IV / IM Vial Dosing',
+    doseUnit: 'mL',
+    weightBased: false,
+    formulaType: 'injectionCalc',
+    notes: 'Formula: (Prescribed Dose ÷ Available Vial Dose) × Available Diluent Volume. Example: (500 mg ÷ 1000 mg) × 10 mL = 5 mL.',
+    example: { prescribed: 500, available: 1000, availVol: 10 }
+  },
+
+  ivFlowRate: {
+    name: 'IV Flow Rate (mL/hr)',
+    generic: 'Flow Rate = Total Volume (mL) ÷ Time (hours)',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '💧',
+    formulation: 'Volumetric Pump Rate',
+    doseUnit: 'mL/hr',
+    weightBased: false,
+    formulaType: 'ivFlowRateCalc',
+    notes: 'Formula: Total Volume (mL) ÷ Time (hours). Example: 1000 mL over 8 hours = 125 mL/hr.',
+    example: { volume: 1000, hours: 8 }
+  },
+
+  dropRate: {
+    name: 'Drops Per Minute (gtt/min)',
+    generic: 'Drop Rate = (Volume × Drop Factor) ÷ Time (min)',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '⏱️',
+    formulation: 'Gravity IV Infusion',
+    doseUnit: 'gtt/min',
+    weightBased: false,
+    formulaType: 'dropRateCalc',
+    notes: 'Formula: (Total Volume in mL × Drop Factor) ÷ Time in minutes. Example: (500 mL × 20 gtt/mL) ÷ 240 min = 42 gtt/min.',
+    example: { volume: 500, hours: 4, dropFactor: 20 }
+  },
+
+  weightDoseBasic: {
+    name: 'Weight-Based Dosing',
+    generic: 'Required Dose = Dose/kg × Patient Weight',
+    category: 'basic_calc',
+    categoryLabel: 'Basic Formula',
+    icon: '⚖️',
+    formulation: 'Single / Daily Weight-based Dose',
+    doseUnit: 'mg',
+    weightBased: true,
+    formulaType: 'weightDoseCalc',
+    notes: 'Formula: Dose per kg × Patient Weight (kg). Example: 15 mg/kg × 20 kg = 300 mg.',
+    example: { dosePerKg: 15, weight: 20 }
+  },
 };
 
 // ── Category Config ──
 const CATEGORIES = [
   { key: 'all', label: 'All Drugs', icon: '💊' },
+  { key: 'basic_calc', label: 'Basic Formulas', icon: '📝' },
   { key: 'other', label: 'Custom Calc', icon: '🧮' },
   { key: 'vasopressor', label: 'Vasopressors', icon: '💉' },
   { key: 'vasodilator', label: 'Vasodilators', icon: '🫀' },
@@ -743,50 +828,71 @@ function getDoseRangePercent(drug, dose) {
 // ── UI Rendering ──
 function renderDrugGrid() {
   const grid = document.getElementById('drugGrid');
-  const drugs = getFilteredDrugs();
+  if (!grid) return;
 
-  if (drugs.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
+  // Build grid items once if grid is empty
+  const cardElements = grid.querySelectorAll('.drug-card');
+  if (cardElements.length === 0) {
+    grid.innerHTML = Object.entries(DRUGS).map(([key, drug]) => `
+      <div class="drug-card cat-${drug.category}" 
+           data-drug="${key}" 
+           data-category="${drug.category}" 
+           data-search="${(drug.name + ' ' + drug.generic + ' ' + drug.categoryLabel).toLowerCase()}" 
+           onclick="openCalculator('${key}')">
+        <div class="drug-card-banner">
+          <img src="assets/meds/${key}.png" alt="${drug.name}" class="drug-card-banner-img" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+          <span class="drug-card-badge">${drug.categoryLabel}</span>
+        </div>
+        <div class="drug-card-body">
+          <div class="drug-card-name">${drug.name}</div>
+          <div class="drug-card-generic">${drug.generic}</div>
+          <div class="drug-card-info">
+            <div class="drug-card-tag">
+              <span>📐</span> ${drug.doseUnit}
+            </div>
+            ${drug.weightBased ? '<div class="drug-card-tag"><span>⚖️</span> Weight-based</div>' : ''}
+            ${drug.doseRange ? `<div class="drug-card-tag"><span>📊</span> ${drug.doseRange.min}–${drug.doseRange.max}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Fast DOM visibility toggling (Instant performance)
+  const q = (state.searchQuery || '').toLowerCase().trim();
+  const selectedCat = state.selectedCategory || 'all';
+  const cards = grid.querySelectorAll('.drug-card');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const cat = card.getAttribute('data-category');
+    const searchData = card.getAttribute('data-search') || '';
+    const matchesCat = selectedCat === 'all' || cat === selectedCat;
+    const matchesSearch = !q || searchData.includes(q);
+    const visible = matchesCat && matchesSearch;
+
+    card.style.display = visible ? '' : 'none';
+    if (visible) visibleCount++;
+  });
+
+  // Toggle empty state notice
+  let emptyStateEl = document.getElementById('drugGridEmptyState');
+  if (visibleCount === 0) {
+    if (!emptyStateEl) {
+      emptyStateEl = document.createElement('div');
+      emptyStateEl.id = 'drugGridEmptyState';
+      emptyStateEl.className = 'empty-state';
+      emptyStateEl.innerHTML = `
         <div class="empty-state-icon">🔍</div>
         <h3>No drugs found</h3>
         <p>Try adjusting your search or category filter</p>
-      </div>
-    `;
-    return;
+      `;
+      grid.appendChild(emptyStateEl);
+    }
+    emptyStateEl.style.display = 'block';
+  } else if (emptyStateEl) {
+    emptyStateEl.style.display = 'none';
   }
-
-  grid.innerHTML = drugs.map(([key, drug]) => `
-    <div class="drug-card cat-${drug.category}" data-drug="${key}" onclick="openCalculator('${key}')">
-      <div class="drug-card-banner">
-        <img src="assets/meds/${key}.png" alt="${drug.name}" class="drug-card-banner-img" onerror="this.style.display='none';"/>
-        <span class="drug-card-badge">${drug.categoryLabel}</span>
-      </div>
-      <div class="drug-card-body">
-        <div class="drug-card-name">${drug.name}</div>
-        <div class="drug-card-generic">${drug.generic}</div>
-        <div class="drug-card-info">
-          <div class="drug-card-tag">
-            <span>📐</span> ${drug.doseUnit}
-          </div>
-          ${drug.weightBased ? '<div class="drug-card-tag"><span>⚖️</span> Weight-based</div>' : ''}
-          ${drug.doseRange ? `<div class="drug-card-tag"><span>📊</span> ${drug.doseRange.min}–${drug.doseRange.max}</div>` : ''}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function getFilteredDrugs() {
-  return Object.entries(DRUGS).filter(([key, drug]) => {
-    const matchesCategory = state.selectedCategory === 'all' || drug.category === state.selectedCategory;
-    const q = state.searchQuery.toLowerCase();
-    const matchesSearch = !q ||
-      drug.name.toLowerCase().includes(q) ||
-      drug.generic.toLowerCase().includes(q) ||
-      drug.categoryLabel.toLowerCase().includes(q);
-    return matchesCategory && matchesSearch;
-  });
 }
 
 function renderCategoryPills() {
@@ -875,6 +981,10 @@ function renderCalculatorPanel(drug) {
   else if (drug.formulaType === 'bicarbDeficit') {
     html = renderBicarbPanel(drug);
   }
+  // Special: basic formulas (Drug Calculations Made Easy)
+  else if (['tabletCalc', 'liquidCalc', 'injectionCalc', 'ivFlowRateCalc', 'dropRateCalc', 'weightDoseCalc'].includes(drug.formulaType)) {
+    html = renderBasicFormulaPanel(drug);
+  }
   // Standard drip calculators
   else {
     html = renderStandardPanel(drug);
@@ -882,6 +992,173 @@ function renderCalculatorPanel(drug) {
 
   panel.innerHTML = html;
   attachCalcListeners(drug);
+}
+
+function renderBasicFormulaPanel(drug) {
+  let html = '';
+  const ex = drug.example || {};
+
+  if (drug.formulaType === 'tabletCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Prescribed Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || ''}" step="any" min="0">
+            <span class="input-suffix">mg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Available Dose per Tablet</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 250" value="${ex.available || ''}" step="any" min="0">
+            <span class="input-suffix">mg/tab</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (drug.formulaType === 'liquidCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Prescribed Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 250" value="${ex.prescribed || ''}" step="any" min="0">
+            <span class="input-suffix">mg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Available Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 125" value="${ex.available || ''}" step="any" min="0">
+            <span class="input-suffix">mg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">3. Volume Available</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicAvailVol" placeholder="e.g. 5" value="${ex.availVol || ''}" step="any" min="0">
+            <span class="input-suffix">mL</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (drug.formulaType === 'injectionCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Prescribed Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicPrescribedDose" placeholder="e.g. 500" value="${ex.prescribed || ''}" step="any" min="0">
+            <span class="input-suffix">mg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Available Vial Dose</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicAvailableDose" placeholder="e.g. 1000" value="${ex.available || ''}" step="any" min="0">
+            <span class="input-suffix">mg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">3. Available Diluent Volume</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicAvailVol" placeholder="e.g. 10" value="${ex.availVol || ''}" step="any" min="0">
+            <span class="input-suffix">mL</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (drug.formulaType === 'ivFlowRateCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Total Volume</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 1000" value="${ex.volume || ''}" step="any" min="0">
+            <span class="input-suffix">mL</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Time Duration</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicTimeHours" placeholder="e.g. 8" value="${ex.hours || ''}" step="any" min="0">
+            <span class="input-suffix">hours</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (drug.formulaType === 'dropRateCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Total Volume</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicTotalVol" placeholder="e.g. 500" value="${ex.volume || ''}" step="any" min="0">
+            <span class="input-suffix">mL</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Drop Factor</div>
+        <div class="input-group">
+          <select class="input-field" id="basicDropFactor" style="background: rgba(15,23,42,0.8); color: #fff;">
+            <option value="10">10 gtt/mL (Macro drip)</option>
+            <option value="15">15 gtt/mL (Macro drip)</option>
+            <option value="20" selected>20 gtt/mL (Standard macro drip)</option>
+            <option value="60">60 gtt/mL (Micro drip / Pediatric)</option>
+          </select>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">3. Infusion Time</div>
+        <div class="input-group">
+          <div class="input-wrapper" style="flex: 2;">
+            <input type="number" class="input-field" id="basicTimeVal" placeholder="e.g. 4" value="${ex.hours || ''}" step="any" min="0">
+          </div>
+          <select class="input-field" id="basicTimeUnit" style="flex: 1; background: rgba(15,23,42,0.8); color: #fff;">
+            <option value="hours" selected>Hours</option>
+            <option value="minutes">Minutes</option>
+          </select>
+        </div>
+      </div>
+    `;
+  } else if (drug.formulaType === 'weightDoseCalc') {
+    html += `
+      <div class="calc-section">
+        <div class="calc-section-title">1. Dose Per Kilogram</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicDosePerKg" placeholder="e.g. 15" value="${ex.dosePerKg || ''}" step="any" min="0">
+            <span class="input-suffix">mg/kg</span>
+          </div>
+        </div>
+      </div>
+      <div class="calc-section">
+        <div class="calc-section-title">2. Patient Weight</div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="basicWeight" placeholder="e.g. 20" value="${ex.weight || ''}" step="any" min="0">
+            <span class="input-suffix">kg</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
 }
 
 function renderStandardPanel(drug) {
@@ -1434,11 +1711,168 @@ function attachCalcListeners(drug) {
   if (presetCustomAmtEl) {
     presetCustomAmtEl.addEventListener('input', (e) => { state.presetCustomAmt = e.target.value; recalc(); });
   }
+
+  // Basic Formulas Listeners
+  const basicInputs = ['basicPrescribedDose', 'basicAvailableDose', 'basicAvailVol', 'basicTotalVol', 'basicTimeHours', 'basicDropFactor', 'basicTimeVal', 'basicTimeUnit', 'basicDosePerKg', 'basicWeight'];
+  basicInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    }
+  });
 }
 
 function recalculate(drug) {
   const resultEl = document.getElementById('calcResult');
   if (!resultEl) return;
+
+  // Basic Drug Calculations Made Easy
+  if (['tabletCalc', 'liquidCalc', 'injectionCalc', 'ivFlowRateCalc', 'dropRateCalc', 'weightDoseCalc'].includes(drug.formulaType)) {
+    let resultHTML = '';
+    
+    if (drug.formulaType === 'tabletCalc') {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      if (isNaN(pres) || isNaN(avail) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = pres / avail;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Quantity</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">Tablets / Capsules</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Prescribed ÷ Available</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${pres} mg ÷ ${avail} mg/tab</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (drug.formulaType === 'liquidCalc') {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = (pres / avail) * vol;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Volume</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">mL (Liquid / Suspension)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">(Prescribed ÷ Available) × Vol</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">(${pres} mg ÷ ${avail} mg) × ${vol} mL</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (drug.formulaType === 'injectionCalc') {
+      const pres = parseFloat(document.getElementById('basicPrescribedDose')?.value);
+      const avail = parseFloat(document.getElementById('basicAvailableDose')?.value);
+      const vol = parseFloat(document.getElementById('basicAvailVol')?.value);
+      if (isNaN(pres) || isNaN(avail) || isNaN(vol) || avail <= 0) { resultEl.innerHTML = ''; return; }
+      const qty = (pres / avail) * vol;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Injectable Vol</div>
+          <div class="result-value">${formatNumber(qty, 2)}</div>
+          <div class="result-unit">mL (IV / IM Vial)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">(Prescribed ÷ Available) × Vol</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">(${pres} mg ÷ ${avail} mg) × ${vol} mL</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (drug.formulaType === 'ivFlowRateCalc') {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const hours = parseFloat(document.getElementById('basicTimeHours')?.value);
+      if (isNaN(vol) || isNaN(hours) || hours <= 0) { resultEl.innerHTML = ''; return; }
+      const rate = vol / hours;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">IV Flow Rate</div>
+          <div class="result-value">${formatNumber(rate, 2)}</div>
+          <div class="result-unit">mL/hr (cc/hr)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Total Vol ÷ Time (hrs)</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${vol} mL ÷ ${hours} hours</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (drug.formulaType === 'dropRateCalc') {
+      const vol = parseFloat(document.getElementById('basicTotalVol')?.value);
+      const dropFactor = parseFloat(document.getElementById('basicDropFactor')?.value || 20);
+      const timeVal = parseFloat(document.getElementById('basicTimeVal')?.value);
+      const timeUnit = document.getElementById('basicTimeUnit')?.value || 'hours';
+      if (isNaN(vol) || isNaN(timeVal) || timeVal <= 0) { resultEl.innerHTML = ''; return; }
+      const timeMin = timeUnit === 'hours' ? timeVal * 60 : timeVal;
+      const gttMin = (vol * dropFactor) / timeMin;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">Infusion Drop Rate</div>
+          <div class="result-value">${formatNumber(gttMin, 1)}</div>
+          <div class="result-unit">gtt/min (drops/min)</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">(Vol × Drop Factor) ÷ Time (min)</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">(${vol} mL × ${dropFactor} gtt/mL) ÷ ${timeMin} min</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (drug.formulaType === 'weightDoseCalc') {
+      const dosePerKg = parseFloat(document.getElementById('basicDosePerKg')?.value);
+      const wt = parseFloat(document.getElementById('basicWeight')?.value);
+      if (isNaN(dosePerKg) || isNaN(wt) || wt <= 0) { resultEl.innerHTML = ''; return; }
+      const reqDose = dosePerKg * wt;
+      resultHTML = `
+        <div class="result-card">
+          <div class="result-label">Required Total Dose</div>
+          <div class="result-value">${formatNumber(reqDose, 2)}</div>
+          <div class="result-unit">mg</div>
+          <div class="result-details">
+            <div class="result-detail">
+              <div class="result-detail-label">Formula</div>
+              <div class="result-detail-value">Dose/kg × Weight (kg)</div>
+            </div>
+            <div class="result-detail">
+              <div class="result-detail-label">Proof</div>
+              <div class="result-detail-value">${dosePerKg} mg/kg × ${wt} kg</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    resultEl.innerHTML = resultHTML;
+    return;
+  }
 
   // Custom drip calculator
   if (drug.formulaType === 'customDrip') {
@@ -2863,11 +3297,16 @@ function evalMathOp(a, b, op) {
 }
 
 // ── Search ──
+let searchRafId = null;
 function handleSearch(e) {
   state.searchQuery = e.target.value;
   const clearBtn = document.querySelector('.search-clear');
   if (clearBtn) clearBtn.classList.toggle('visible', state.searchQuery.length > 0);
-  renderDrugGrid();
+  
+  if (searchRafId) cancelAnimationFrame(searchRafId);
+  searchRafId = requestAnimationFrame(() => {
+    renderDrugGrid();
+  });
 }
 
 function clearSearch() {
@@ -2929,4 +3368,46 @@ function init() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  try {
+    const saved = localStorage.getItem('icu_user_rating');
+    if (saved) {
+      submitAppRating(parseInt(saved, 10));
+    }
+  } catch (e) {}
+});
+
+// ── Interactive User Rating Engine ──
+function submitAppRating(stars) {
+  const picker = document.getElementById('starPicker');
+  const msg = document.getElementById('ratingStatusMsg');
+  if (!picker || !msg) return;
+
+  const starBtns = picker.querySelectorAll('.star-btn');
+  starBtns.forEach((btn, index) => {
+    if (index < stars) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  try {
+    localStorage.setItem('icu_user_rating', stars.toString());
+  } catch (e) {}
+
+  msg.innerHTML = `<span style="color: #22c55e; font-weight:700;">Thank you! You rated ${stars}/5 Stars ★</span>`;
+}
+
+// ── Drug Calculations Made Easy Modal Handlers ──
+function openBasicFormulasModal() {
+  showDisclaimer();
+  const overlay = document.getElementById('basicFormulasOverlay');
+  if (overlay) overlay.classList.add('open');
+}
+
+function closeBasicFormulasModal() {
+  const overlay = document.getElementById('basicFormulasOverlay');
+  if (overlay) overlay.classList.remove('open');
+}

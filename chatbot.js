@@ -9,6 +9,15 @@
 const PHARMACY_KB = {
   // ── Complete Drug Monographs ──
   monographs: {
+    basicFormulas: {
+      name: 'Drug Calculations Made Easy Formulas',
+      class: 'Bedside Clinical Math & Dosing Formulas',
+      mechanism: '6 Fundamental Formulas: 1. Tablet (Prescribed ÷ Available), 2. Liquid ((Prescribed ÷ Available) × Vol), 3. Injection ((Prescribed ÷ Available) × Vol), 4. IV Flow Rate (Vol ÷ Hours), 5. Drops/min ((Vol × Drop Factor) ÷ Min), 6. Weight-based (Dose/kg × Weight).',
+      dosing: 'Tablet Qty = Prescribed / Available. Liquid Vol = (Prescribed / Available) * Vol. Injection Vol = (Prescribed / Available) * Vol. IV Rate (mL/hr) = Volume / Hours. gtt/min = (Volume * Drop Factor) / Minutes. Weight Dose = Dose/kg * kg.',
+      pharmacokinetics: 'Immediate bedside calculations for accurate drug administration and infusion pump settings.',
+      adverseEffects: 'Prevents dosing errors, underdosing, or overdose.',
+      warnings: 'Always double-check drop factor (10, 15, 20, 60 gtt/mL) and confirm units (mg vs mcg, mL/hr vs gtt/min).'
+    },
     heparin: {
       name: 'Heparin (Unfractionated)',
       class: 'Parenteral Anticoagulant (Indirect Thrombin & Factor Xa Inhibitor)',
