@@ -638,6 +638,9 @@ const state = {
   selectedCategory: 'all',
   searchQuery: '',
   calcMode: 'doseToRate', // or 'rateToDose'
+  ivStart: '', // IV start date and time (datetime-local value), kept across mode switches
+  ivCustomVolume: '', // custom bag volume in mL for the hours-to-run table
+  ivDripSet: '15', // drop factor in gtt/mL: 15 and 20 are macro, 60 is micro
   selectedVolume: '250cc', // default IVF volume key
   selectedConc: 0,        // index into concentration array
   weight: '',
@@ -1018,6 +1021,119 @@ function renderCalculatorPanel(drug) {
 
   panel.innerHTML = html;
   attachCalcListeners(drug);
+}
+
+// Start date and time input for the drip and IV Flow Rate cards. Value kept in state across mode switches.
+function renderIvStartTimeSection() {
+  return `
+    <div class="calc-section">
+      <div class="calc-section-title">3. Start Date and Time</div>
+      <input type="datetime-local" class="input-field" id="ivStart" aria-label="Start date and time" value="${state.ivStart}" style="min-height: 44px; width: 100%;">
+    </div>
+  `;
+}
+
+// Custom bag volume input for the hours-to-run table. Lives outside the result area so typing keeps focus.
+function renderIvCustomVolumeInput() {
+  return `
+    <div class="calc-section">
+      <div class="calc-section-title">4. Custom Bag Volume</div>
+      <div class="input-group">
+        <label class="preset-label" for="ivCustomVolume">Bag volume (mL)</label>
+        <div class="input-wrapper">
+          <input type="number" class="input-field" id="ivCustomVolume" placeholder="e.g. 150" value="${state.ivCustomVolume}" step="any" min="0" inputmode="decimal">
+          <span class="input-suffix">mL</span>
+        </div>
+        <label class="preset-label" for="ivDripSet">Drip set</label>
+        <select class="input-field" id="ivDripSet" style="min-height: 44px; width: 100%;">
+          ${[['15', 'Macro drip (15 gtt/mL)'], ['20', 'Macro drip (20 gtt/mL)'], ['60', 'Micro drip (60 gtt/mL)']]
+            .map(([v, label]) => `<option value="${v}" ${state.ivDripSet === v ? 'selected' : ''}>${label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+// Result detail row showing the end date and time. Empty string until the start time and run hours are valid.
+function renderIvEndLine(runHours) {
+  const end = window.IvEndTime.computeIvEndTime(state.ivStart, runHours);
+  if (!end) return '';
+  return `
+            <div class="result-detail">
+              <div class="result-detail-label">Ends</div>
+              <div class="result-detail-value">${window.IvEndTime.formatIvEndTime(end)}</div>
+            </div>`;
+}
+
+// Hours to run for common bag sizes at the current cc/hr. Empty string until the rate is valid.
+function renderIvVolumeTable(flowRate) {
+  const rate = parseFloat(flowRate);
+  if (!Number.isFinite(rate) || rate <= 0) return '';
+  const volumes = [50, 100, 250, 500, 1000];
+  const rows = volumes.map((vol) => {
+    const hours = vol / rate;
+    const hrsInt = Math.floor(hours);
+    const minsInt = Math.round((hours % 1) * 60);
+    const end = window.IvEndTime.computeIvEndTime(state.ivStart, hours);
+    const endText = end ? window.IvEndTime.formatIvEndTime(end) : '—';
+    return `
+          <tr>
+            <td>${vol} mL</td>
+            <td>${formatNumber(hours, 2)} hrs (${hrsInt}h ${minsInt}m)</td>
+            <td>${endText}</td>
+          </tr>`;
+  }).join('');
+
+  return `
+    <div class="calc-section">
+      <div class="calc-section-title">Hours to Run at ${formatNumber(rate, 2)} cc/hr</div>
+      <table class="dosing-table">
+        <thead>
+          <tr>
+            <th>Bag Volume</th>
+            <th>Hours to Run</th>
+            <th>Ends</th>
+          </tr>
+        </thead>
+        <tbody>${rows}
+        </tbody>
+      </table>
+      ${renderIvCustomResult(rate)}
+    </div>`;
+}
+
+// Result for the custom bag volume, shown below the hours-to-run table.
+function renderIvCustomResult(rate) {
+  const vol = parseFloat(state.ivCustomVolume);
+  if (!Number.isFinite(vol) || vol <= 0) return '';
+  const hours = vol / rate;
+  const hrsInt = Math.floor(hours);
+  const minsInt = Math.round((hours % 1) * 60);
+  const end = window.IvEndTime.computeIvEndTime(state.ivStart, hours);
+  const endText = end ? window.IvEndTime.formatIvEndTime(end) : '—';
+  const dropFactor = parseFloat(state.ivDripSet) || 15;
+  const dripType = dropFactor === 60 ? 'Micro drip' : 'Macro drip';
+  const gttPerMin = (rate * dropFactor) / 60;
+  return `
+      <div class="result-card" style="margin-top: 12px;">
+        <div class="result-label">Custom Bag Result: ${dripType} (${dropFactor} gtt/mL)</div>
+        <div class="result-value">${formatNumber(hours, 2)} hrs</div>
+        <div class="result-unit">${vol} mL at ${formatNumber(rate, 2)} cc/hr</div>
+        <div class="result-details">
+          <div class="result-detail">
+            <div class="result-detail-label">Hours to Run</div>
+            <div class="result-detail-value">${hrsInt}h ${minsInt}m</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Ends</div>
+            <div class="result-detail-value">${endText}</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-label">Drops per Minute</div>
+            <div class="result-detail-value">${formatNumber(gttPerMin, 1)} gtt/min</div>
+          </div>
+        </div>
+      </div>`;
 }
 
 function setBasicInput(id, val) {
@@ -1597,6 +1713,7 @@ function renderBasicFormulaPanel(drug) {
         </div>
       `;
     }
+    html += renderIvStartTimeSection();
   } else if (drug.formulaType === 'dropRateCalc') {
     html += `
       <div class="mode-switcher">
@@ -2037,6 +2154,11 @@ function renderStandardPanel(drug) {
     `;
   }
 
+  // Start time and custom volume, used by the hours-to-run table
+  html += renderIvStartTimeSection();
+  html += renderIvCustomVolumeInput();
+  html += '<div id="ivVolumeTable"></div>';
+
   // Result area
   html += '<div id="calcResult"></div>';
 
@@ -2416,6 +2538,22 @@ function attachCalcListeners(drug) {
       el.addEventListener('change', recalc);
     }
   });
+
+  const ivCustomVolumeEl = document.getElementById('ivCustomVolume');
+  if (ivCustomVolumeEl) {
+    ivCustomVolumeEl.addEventListener('input', (e) => { state.ivCustomVolume = e.target.value; recalc(); });
+  }
+
+  const ivDripSetEl = document.getElementById('ivDripSet');
+  if (ivDripSetEl) {
+    ivDripSetEl.addEventListener('change', (e) => { state.ivDripSet = e.target.value; recalc(); });
+  }
+
+  const ivStartEl = document.getElementById('ivStart');
+  if (ivStartEl) {
+    ivStartEl.addEventListener('input', (e) => { state.ivStart = e.target.value; recalc(); });
+    ivStartEl.addEventListener('change', (e) => { state.ivStart = e.target.value; recalc(); });
+  }
 
   // Trigger initial calculation when panel loads
   recalc();
@@ -2961,7 +3099,7 @@ function recalculateBasicFormula(drug, resultEl) {
           <div class="result-label">IV Infusion Flow Rate</div>
           <div class="result-value">${formatNumber(rate, 2)}</div>
           <div class="result-unit">mL/hr (cc/hr)</div>
-          <div class="result-details">
+          <div class="result-details">${renderIvEndLine(hours)}
             <div class="result-detail">
               <div class="result-detail-label">Macro Drip (15 gtt)</div>
               <div class="result-detail-value">${formatNumber(macro15, 1)} gtt/min</div>
@@ -3019,7 +3157,7 @@ function recalculateBasicFormula(drug, resultEl) {
           <div class="result-label">Total Infusion Duration</div>
           <div class="result-value">${formatNumber(hours, 2)} hrs</div>
           <div class="result-unit">(${hrsInt}h ${minsInt}m)</div>
-          <div class="result-details">
+          <div class="result-details">${renderIvEndLine(hours)}
             <div class="result-detail">
               <div class="result-detail-label">Total Minutes</div>
               <div class="result-detail-value">${formatNumber(hours * 60, 0)} min</div>
@@ -3341,6 +3479,10 @@ function recalculate(drug) {
   const resultEl = document.getElementById('calcResult');
   if (!resultEl) return;
 
+  // Hours-to-run table sits outside the result area. Clear it, then the standard branches refill it.
+  const ivTableEl = document.getElementById('ivVolumeTable');
+  if (ivTableEl) ivTableEl.innerHTML = '';
+
   // Fentanyl mL to mcg Conversion
   if (drug.formulaType === 'fentanylCalc') {
     recalculateFentanyl(drug, resultEl);
@@ -3536,6 +3678,8 @@ function recalculate(drug) {
       </button>
     `;
 
+    if (ivTableEl) ivTableEl.innerHTML = renderIvVolumeTable(result.rate);
+
     if (state.showFormulaBreakdown) {
       resultEl.innerHTML += generateFormulaBreakdownHTML(drug, state.calcMode, conc, weight, dose, null, result);
     }
@@ -3584,6 +3728,8 @@ function recalculate(drug) {
         </div>
       `;
     }
+
+    if (ivTableEl) ivTableEl.innerHTML = renderIvVolumeTable(rate);
 
     if (state.showFormulaBreakdown) {
       resultEl.innerHTML += generateFormulaBreakdownHTML(drug, state.calcMode, conc, weight, null, rate, result);
